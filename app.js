@@ -180,85 +180,209 @@ const features = Array.from(document.querySelectorAll('.feature'));
 
     initBillTrend();
 
-    // --- 검색: 국회도서관 Open API 연동 (별칭/언론용어 매핑 포함) ---
+    // --- 검색: 국회도서관 Open API 연동 (언론 키워드 사전 + 상세보기 + 관심 목록) ---
     function escapeSearchHtml(value) {
       return String(value).replace(/[&<>"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
     }
 
-    const SEARCH_ALIAS_MAP = {
-      '노란봉투법': '노동조합',
-      '보완수사권': '형사소송법',
-      '검수완박': '검찰',
-      '중처법': '중대재해',
-      '중대재해처벌법': '중대재해'
-    };
-    const RELATED_SUGGESTIONS_MAP = {
-      '노란봉투법': ['노동조합', '쟁의행위', '단체교섭'],
-      '보완수사권': ['형사소송법', '검찰', '수사권'],
-      '검수완박': ['검찰', '수사권', '형사소송법'],
-      '중처법': ['중대재해', '산업안전보건법', '사업주 책임'],
-      '중대재해처벌법': ['중대재해', '산업안전보건법', '사업주 책임']
+    // 1) 언론 키워드 사전: 뉴스/방송에서 자주 쓰는 표현 -> 실제 법률 용어(복수 후보)
+    const MEDIA_KEYWORD_MAP = {
+      '노란봉투법': ['노동조합법', '노동쟁의', '노동조합'],
+      '검수완박': ['검찰청법', '형사소송법', '수사권'],
+      '보완수사권': ['형사소송법', '수사권', '검찰수사'],
+      '전세사기법': ['전세사기', '주택임대차', '특별법'],
+      '간호법': ['간호사', '의료법', '간호'],
+      '중대재해처벌법': ['중대재해', '산업안전보건법', '사업주 책임'],
+      '중처법': ['중대재해', '산업안전보건법', '사업주 책임']
     };
     const DEFAULT_SEARCH_SUGGESTIONS = ['노동조합', '형사소송법', '중대재해'];
 
-    function resolveSearchAlias(rawQuery) {
-      const trimmed = (rawQuery || '').trim();
-      const mapped = SEARCH_ALIAS_MAP[trimmed];
-      return { original: trimmed, effective: mapped || trimmed, aliasUsed: !!mapped };
+    let lastSearchItems = [];
+    let currentDetailItem = null;
+
+    async function fetchBills(term) {
+      const res = await fetch(`/api/nanet-search?q=${encodeURIComponent(term)}`);
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const data = await res.json();
+      return Array.isArray(data.items) ? data.items : [];
     }
 
-    function getRelatedSuggestions(original, effective) {
-      return RELATED_SUGGESTIONS_MAP[original] || RELATED_SUGGESTIONS_MAP[effective] || DEFAULT_SEARCH_SUGGESTIONS;
+    function dedupeBillItems(items) {
+      const seen = new Set();
+      const result = [];
+      items.forEach(item => {
+        const key = item.billNo || item.link || item.title;
+        if (key && !seen.has(key)) {
+          seen.add(key);
+          result.push(item);
+        }
+      });
+      return result;
     }
 
-    function renderSearchResultRows(items) {
-      return items.slice(0, 10).map(item => {
-        const metaParts = [escapeSearchHtml(item.author || '저자 미상')];
-        if (item.pubDate) metaParts.push(escapeSearchHtml(item.pubDate));
-        else if (item.pubYear) metaParts.push(escapeSearchHtml(item.pubYear));
-        if (item.committee) metaParts.push(escapeSearchHtml(item.committee));
-        const statusBadge = item.status ? `<span class="pill" style="margin-left:8px;font-size:11px;padding:4px 10px">${escapeSearchHtml(item.status)}</span>` : '';
-        return `
-          <div class="post" style="margin-top:10px">
-            <div class="title">${escapeSearchHtml(item.title || '(제목 없음)')}${statusBadge}</div>
-            <div class="meta">${metaParts.join(' · ')}</div>
-            ${item.link ? `<div style="margin-top:8px"><a href="${item.link}" target="_blank" rel="noopener" style="color:var(--blue-primary);font-weight:700">원문/상세 보기 →</a></div>` : ''}
-          </div>`;
-      }).join('');
+    // --- 관심 목록: localStorage 기반 (로그인 불필요) ---
+    const BOOKMARK_STORAGE_KEY = 'krPolicyBookmarks';
+    function getBookmarks() {
+      try {
+        const raw = localStorage.getItem(BOOKMARK_STORAGE_KEY);
+        const parsed = raw ? JSON.parse(raw) : [];
+        return Array.isArray(parsed) ? parsed : [];
+      } catch (err) {
+        return [];
+      }
+    }
+    function saveBookmarks(list) {
+      try { localStorage.setItem(BOOKMARK_STORAGE_KEY, JSON.stringify(list)); } catch (err) { /* 저장 공간 부족 등은 무시 */ }
+    }
+    function bookmarkKey(item) {
+      return (item && (item.billNo || item.link || item.title)) || '';
+    }
+    function isBookmarked(item) {
+      if (!item) return false;
+      const key = bookmarkKey(item);
+      return getBookmarks().some(b => bookmarkKey(b) === key);
+    }
+    function toggleBookmark(item) {
+      if (!item) return;
+      const list = getBookmarks();
+      const key = bookmarkKey(item);
+      const idx = list.findIndex(b => bookmarkKey(b) === key);
+      if (idx >= 0) {
+        list.splice(idx, 1);
+      } else {
+        list.unshift(Object.assign({}, item, { savedAt: new Date().toISOString() }));
+      }
+      saveBookmarks(list);
+    }
+    function removeBookmarkAt(i) {
+      const list = getBookmarks();
+      list.splice(i, 1);
+      saveBookmarks(list);
+    }
+    function clearAllBookmarks() {
+      saveBookmarks([]);
     }
 
-    function renderNanetSearchResult(original, effective, aliasUsed, items) {
-      if (items.length === 0) {
-        const suggestions = getRelatedSuggestions(original, effective);
-        const suggestionHtml = suggestions.map(s =>
-          `<button type="button" class="chip" style="cursor:pointer;font:inherit" onclick="document.getElementById('searchInput').value='${s}'; runNanetSearch('${s}');">${escapeSearchHtml(s)}</button>`
-        ).join('');
-        const desc = aliasUsed
-          ? `"${original}"("${effective}" 키워드로 변환)에 대한 국회도서관 검색 결과가 없습니다.`
-          : `"${original}"에 대한 국회도서관 검색 결과가 없습니다.`;
-        openModal('검색 결과 없음', desc, `<div style="margin-top:4px"><div style="font-weight:700;color:var(--blue-text);margin-bottom:10px">연관 검색어 추천</div><div class="chips">${suggestionHtml}</div></div>`, { hideAction: true });
+    // --- 검색 결과 카드 / 관심 목록 카드 / 상세보기 모달 ---
+    function renderSearchCard(item, i) {
+      const bookmarked = isBookmarked(item);
+      const statusBadge = item.status ? `<span class="pill" style="margin-left:8px;font-size:11px;padding:4px 10px">${escapeSearchHtml(item.status)}</span>` : '';
+      const metaParts = [escapeSearchHtml(item.author || '저자 미상')];
+      if (item.pubDate) metaParts.push(escapeSearchHtml(item.pubDate));
+      else if (item.pubYear) metaParts.push(escapeSearchHtml(item.pubYear));
+      if (item.committee) metaParts.push(escapeSearchHtml(item.committee));
+      return `
+        <div class="post" style="margin-top:10px;cursor:pointer" data-action="open-search-detail" data-idx="${i}">
+          <div class="title">${escapeSearchHtml(item.title || '(제목 없음)')}${statusBadge}</div>
+          <div class="meta">${metaParts.join(' · ')}</div>
+          <div style="margin-top:8px;display:flex;gap:8px;flex-wrap:wrap">
+            <button type="button" class="small-btn" style="padding:6px 12px;font-size:12px" data-action="toggle-save" data-idx="${i}">${bookmarked ? '저장됨 ✓' : '저장'}</button>
+            ${item.link ? `<a href="${item.link}" target="_blank" rel="noopener" class="small-btn" style="padding:6px 12px;font-size:12px;text-decoration:none;display:inline-block" onclick="event.stopPropagation()">원문 보기 →</a>` : ''}
+          </div>
+        </div>`;
+    }
+
+    function renderBookmarkCard(item, i) {
+      const metaParts = [escapeSearchHtml(item.author || '저자 미상')];
+      if (item.pubDate) metaParts.push(escapeSearchHtml(item.pubDate));
+      return `
+        <div class="post" style="margin-top:10px;cursor:pointer" data-action="open-bookmark-detail" data-idx="${i}">
+          <div class="title">${escapeSearchHtml(item.title || '(제목 없음)')}</div>
+          <div class="meta">${metaParts.join(' · ')}</div>
+          <button type="button" class="small-btn" style="margin-top:8px;padding:6px 12px;font-size:12px" data-action="remove-bookmark" data-idx="${i}">삭제</button>
+        </div>`;
+    }
+
+    function openBillDetail(item) {
+      if (!item) return;
+      currentDetailItem = item;
+      const bookmarked = isBookmarked(item);
+      const body = `
+        <div style="display:flex;flex-direction:column;gap:10px">
+          <div><strong style="color:var(--blue-text)">발의일</strong> · ${escapeSearchHtml(item.pubDate || item.pubYear || '-')}</div>
+          <div><strong style="color:var(--blue-text)">제안자</strong> · ${escapeSearchHtml(item.author || '-')}</div>
+          <div><strong style="color:var(--blue-text)">소관위원회</strong> · ${escapeSearchHtml(item.committee || '-')}</div>
+          <div><strong style="color:var(--blue-text)">처리상태</strong> · ${escapeSearchHtml(item.status || '진행중')}</div>
+          <div style="padding:12px;border-radius:10px;background:#f8fafc;color:var(--muted);font-size:13px;line-height:1.6">
+            제안이유·주요내용 원문은 열린국회정보 「국회의원 발의법률안」 API에서 별도 제공되지 않아 이 화면에서는 요약할 수 없습니다. 아래 [국회 원문 보기]에서 전체 내용을 확인하실 수 있습니다.
+          </div>
+          <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:6px">
+            <button type="button" class="small-btn" style="background:var(--blue-primary);color:#fff;border-color:var(--blue-primary)" data-action="toggle-save-detail">${bookmarked ? '관심 목록에서 제거' : '관심 목록에 저장'}</button>
+            ${item.link ? `<a href="${item.link}" target="_blank" rel="noopener" class="small-btn" style="text-decoration:none;display:inline-block">국회 원문 보기 →</a>` : ''}
+          </div>
+        </div>`;
+      openModal(item.title || '(제목 없음)', '법안 상세 정보', body, { hideAction: true });
+    }
+
+    function renderBookmarkList() {
+      const list = getBookmarks();
+      if (!list.length) {
+        openModal('관심 목록', '저장된 법안이 없습니다.', '<div style="color:var(--muted);font-size:13px;padding:10px 0">검색 결과에서 [저장] 버튼을 눌러 관심 있는 법안을 추가해보세요.</div>', { hideAction: true });
         return;
       }
-      const rows = renderSearchResultRows(items);
-      const aliasNote = aliasUsed
-        ? `<div style="margin-bottom:10px;padding:8px 12px;border-radius:10px;background:#eef2ff;color:var(--blue-text);font-size:12px;font-weight:700">'${original}' 검색어를 '${effective}' 키워드로 변환하여 조회했습니다.</div>`
-        : '';
-      openModal('국회도서관 검색 결과', `"${original}"에 대한 검색 결과 ${items.length}건`, `${aliasNote}<div style="max-height:360px;overflow:auto">${rows}</div>`, { hideAction: true });
+      const rows = list.map((item, i) => renderBookmarkCard(item, i)).join('');
+      openModal('관심 목록', `저장된 법안 ${list.length}건`, `<div style="max-height:360px;overflow:auto">${rows}</div><div style="margin-top:14px;text-align:right"><button type="button" class="small-btn" data-action="clear-bookmarks">전체 삭제</button></div>`, { hideAction: true });
     }
 
+    // --- 검색 결과 / 결과 없음 렌더링 ---
+    function renderSearchSuccess(original, mediaKeyword, usedKeywords, items) {
+      lastSearchItems = items;
+      let header = '';
+      if (mediaKeyword) {
+        header = `<div style="padding:10px 12px;border-radius:10px;background:#eef2ff;margin-bottom:12px;font-size:13px;line-height:1.7">
+          <div><strong style="color:var(--blue-text)">언론 키워드:</strong> ${escapeSearchHtml(mediaKeyword)}</div>
+          <div><strong style="color:var(--blue-text)">관련 검색어:</strong> ${escapeSearchHtml(usedKeywords.join(', '))}</div>
+          <div><strong style="color:var(--blue-text)">검색 결과:</strong> ${items.length}건</div>
+        </div>`;
+      }
+      const rows = items.slice(0, 10).map((item, i) => renderSearchCard(item, i)).join('');
+      const title = mediaKeyword
+        ? `"${mediaKeyword}" 검색 결과 (${usedKeywords[0]} 관련 법안 기준)`
+        : `"${original}"에 대한 검색 결과 ${items.length}건`;
+      openModal('국회도서관 검색 결과', title, `${header}<div style="max-height:360px;overflow:auto">${rows}</div>`, { hideAction: true });
+    }
+
+    function renderSearchNoResult(original, suggestions) {
+      const list = (suggestions && suggestions.length) ? suggestions : DEFAULT_SEARCH_SUGGESTIONS;
+      const suggestionHtml = list.map(s =>
+        `<button type="button" class="chip" style="cursor:pointer;font:inherit" data-action="search-suggestion" data-keyword="${escapeSearchHtml(s)}">${escapeSearchHtml(s)}</button>`
+      ).join('');
+      openModal('관련 정책 키워드를 찾지 못했습니다.', `"${original}"에 대한 검색 결과가 없습니다.`, `<div style="margin-top:4px"><div style="font-weight:700;color:var(--blue-text);margin-bottom:10px">추천 검색</div><div class="chips">${suggestionHtml}</div></div>`, { hideAction: true });
+    }
+
+    // --- 검색 메인 흐름: 1차(원본) -> 2차(언론 키워드 사전 확인) -> 3차(매핑 키워드 순차 검색) -> 4차(통합+중복제거) ---
     async function runNanetSearch(rawQuery) {
-      const { original, effective, aliasUsed } = resolveSearchAlias(rawQuery);
+      const original = (rawQuery || '').trim();
       if (!original) {
         openModal('검색어를 입력해 주세요', '검색어를 입력하면 관련 법안과 발의자가 표시됩니다.');
         return;
       }
       openModal('국회도서관 검색 중...', `"${original}"에 대한 국회도서관 자료를 불러오는 중입니다.`, '<div style="padding:20px;text-align:center;color:var(--muted)">잠시만 기다려 주세요…</div>', { hideAction: true });
       try {
-        const res = await fetch(`/api/nanet-search?q=${encodeURIComponent(effective)}`);
-        if (!res.ok) throw new Error(`HTTP ${res.status}`);
-        const data = await res.json();
-        const items = Array.isArray(data.items) ? data.items : [];
-        renderNanetSearchResult(original, effective, aliasUsed, items);
+        // 1차: 원본 검색어로 검색
+        let items = dedupeBillItems(await fetchBills(original));
+        let mediaKeyword = null;
+        let usedKeywords = [];
+
+        if (items.length === 0) {
+          // 2차: 언론 키워드 사전 확인
+          const mapped = MEDIA_KEYWORD_MAP[original];
+          if (mapped && mapped.length) {
+            mediaKeyword = original;
+            usedKeywords = mapped;
+            // 3차: 매핑된 키워드들로 순차 검색 -> 4차: 통합 후 중복 제거
+            const resultsByKeyword = await Promise.all(mapped.map(kw => fetchBills(kw).catch(() => [])));
+            items = dedupeBillItems(resultsByKeyword.flat());
+          }
+        }
+
+        if (items.length === 0) {
+          const suggestions = MEDIA_KEYWORD_MAP[original] || null;
+          renderSearchNoResult(original, suggestions);
+          return;
+        }
+
+        renderSearchSuccess(original, mediaKeyword, usedKeywords, items);
       } catch (err) {
         openModal('검색 실패', '국회도서관 API 호출에 실패했습니다. 잠시 후 다시 시도해주세요.', `<div style="color:var(--muted);font-size:13px">${escapeSearchHtml(err.message || '')}</div>`, { hideAction: true });
       }
@@ -268,6 +392,60 @@ const features = Array.from(document.querySelectorAll('.feature'));
         e.preventDefault();
         runNanetSearch(document.getElementById('searchInput').value.trim());
       }
+    });
+
+    // --- 모달 내부 동적 콘텐츠(카드/버튼/추천칩)에 대한 이벤트 위임 ---
+    modalBody.addEventListener('click', (e) => {
+      const suggBtn = e.target.closest('[data-action="search-suggestion"]');
+      if (suggBtn) {
+        runNanetSearch(suggBtn.dataset.keyword);
+        return;
+      }
+      const saveBtn = e.target.closest('[data-action="toggle-save"]');
+      if (saveBtn) {
+        e.stopPropagation();
+        const idx = Number(saveBtn.dataset.idx);
+        const item = lastSearchItems[idx];
+        toggleBookmark(item);
+        saveBtn.textContent = isBookmarked(item) ? '저장됨 ✓' : '저장';
+        return;
+      }
+      const saveDetailBtn = e.target.closest('[data-action="toggle-save-detail"]');
+      if (saveDetailBtn) {
+        if (!currentDetailItem) return;
+        toggleBookmark(currentDetailItem);
+        saveDetailBtn.textContent = isBookmarked(currentDetailItem) ? '관심 목록에서 제거' : '관심 목록에 저장';
+        return;
+      }
+      const removeBtn = e.target.closest('[data-action="remove-bookmark"]');
+      if (removeBtn) {
+        e.stopPropagation();
+        removeBookmarkAt(Number(removeBtn.dataset.idx));
+        renderBookmarkList();
+        return;
+      }
+      const clearBtn = e.target.closest('[data-action="clear-bookmarks"]');
+      if (clearBtn) {
+        clearAllBookmarks();
+        renderBookmarkList();
+        return;
+      }
+      const bmCard = e.target.closest('[data-action="open-bookmark-detail"]');
+      if (bmCard) {
+        const idx = Number(bmCard.dataset.idx);
+        openBillDetail(getBookmarks()[idx]);
+        return;
+      }
+      const card = e.target.closest('[data-action="open-search-detail"]');
+      if (card) {
+        const idx = Number(card.dataset.idx);
+        openBillDetail(lastSearchItems[idx]);
+        return;
+      }
+    });
+
+    document.getElementById('bookmarkListBtn').addEventListener('click', () => {
+      renderBookmarkList();
     });
 
     // --- 모달 유틸리티 ---

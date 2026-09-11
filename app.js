@@ -180,51 +180,93 @@ const features = Array.from(document.querySelectorAll('.feature'));
 
     initBillTrend();
 
-    // --- 검색: 국회도서관 Open API 연동 ---
+    // --- 검색: 국회도서관 Open API 연동 (별칭/언론용어 매핑 포함) ---
     function escapeSearchHtml(value) {
       return String(value).replace(/[&<>"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
     }
-    async function runNanetSearch(query) {
-      openModal('국회도서관 검색 중...', `"${query}"에 대한 국회도서관 자료를 불러오는 중입니다.`, '<div style="padding:20px;text-align:center;color:var(--muted)">잠시만 기다려 주세요…</div>', { hideAction: true });
-      try {
-        const res = await fetch(`/api/nanet-search?q=${encodeURIComponent(query)}`);
-        if (!res.ok) throw new Error(`HTTP ${res.status}`);
-        const data = await res.json();
-        const items = Array.isArray(data.items) ? data.items : [];
-        if (items.length === 0) {
-          openModal('검색 결과 없음', `"${query}"에 대한 국회도서관 검색 결과가 없습니다.`, '', { hideAction: true });
-          return;
-        }
-        const rows = items.slice(0, 10).map(item => {
-          const metaParts = [escapeSearchHtml(item.author || '저자 미상')];
-          if (item.pubDate) metaParts.push(escapeSearchHtml(item.pubDate));
-          else if (item.pubYear) metaParts.push(escapeSearchHtml(item.pubYear));
-          if (item.committee) metaParts.push(escapeSearchHtml(item.committee));
-          const statusBadge = item.status ? `<span class="pill" style="margin-left:8px;font-size:11px;padding:4px 10px">${escapeSearchHtml(item.status)}</span>` : '';
-          return `
+
+    const SEARCH_ALIAS_MAP = {
+      '노란봉투법': '노동조합',
+      '보완수사권': '형사소송법',
+      '검수완박': '검찰',
+      '중처법': '중대재해',
+      '중대재해처벌법': '중대재해'
+    };
+    const RELATED_SUGGESTIONS_MAP = {
+      '노란봉투법': ['노동조합', '쟁의행위', '단체교섭'],
+      '보완수사권': ['형사소송법', '검찰', '수사권'],
+      '검수완박': ['검찰', '수사권', '형사소송법'],
+      '중처법': ['중대재해', '산업안전보건법', '사업주 책임'],
+      '중대재해처벌법': ['중대재해', '산업안전보건법', '사업주 책임']
+    };
+    const DEFAULT_SEARCH_SUGGESTIONS = ['노동조합', '형사소송법', '중대재해'];
+
+    function resolveSearchAlias(rawQuery) {
+      const trimmed = (rawQuery || '').trim();
+      const mapped = SEARCH_ALIAS_MAP[trimmed];
+      return { original: trimmed, effective: mapped || trimmed, aliasUsed: !!mapped };
+    }
+
+    function getRelatedSuggestions(original, effective) {
+      return RELATED_SUGGESTIONS_MAP[original] || RELATED_SUGGESTIONS_MAP[effective] || DEFAULT_SEARCH_SUGGESTIONS;
+    }
+
+    function renderSearchResultRows(items) {
+      return items.slice(0, 10).map(item => {
+        const metaParts = [escapeSearchHtml(item.author || '저자 미상')];
+        if (item.pubDate) metaParts.push(escapeSearchHtml(item.pubDate));
+        else if (item.pubYear) metaParts.push(escapeSearchHtml(item.pubYear));
+        if (item.committee) metaParts.push(escapeSearchHtml(item.committee));
+        const statusBadge = item.status ? `<span class="pill" style="margin-left:8px;font-size:11px;padding:4px 10px">${escapeSearchHtml(item.status)}</span>` : '';
+        return `
           <div class="post" style="margin-top:10px">
             <div class="title">${escapeSearchHtml(item.title || '(제목 없음)')}${statusBadge}</div>
             <div class="meta">${metaParts.join(' · ')}</div>
             ${item.link ? `<div style="margin-top:8px"><a href="${item.link}" target="_blank" rel="noopener" style="color:var(--blue-primary);font-weight:700">원문/상세 보기 →</a></div>` : ''}
           </div>`;
-        }).join('');
-        openModal('국회도서관 검색 결과', `"${query}"에 대한 검색 결과 ${items.length}건`, `<div style="max-height:360px;overflow:auto">${rows}</div>`, { hideAction: true });
+      }).join('');
+    }
+
+    function renderNanetSearchResult(original, effective, aliasUsed, items) {
+      if (items.length === 0) {
+        const suggestions = getRelatedSuggestions(original, effective);
+        const suggestionHtml = suggestions.map(s =>
+          `<button type="button" class="chip" style="cursor:pointer;font:inherit" onclick="document.getElementById('searchInput').value='${s}'; runNanetSearch('${s}');">${escapeSearchHtml(s)}</button>`
+        ).join('');
+        const desc = aliasUsed
+          ? `"${original}"("${effective}" 키워드로 변환)에 대한 국회도서관 검색 결과가 없습니다.`
+          : `"${original}"에 대한 국회도서관 검색 결과가 없습니다.`;
+        openModal('검색 결과 없음', desc, `<div style="margin-top:4px"><div style="font-weight:700;color:var(--blue-text);margin-bottom:10px">연관 검색어 추천</div><div class="chips">${suggestionHtml}</div></div>`, { hideAction: true });
+        return;
+      }
+      const rows = renderSearchResultRows(items);
+      const aliasNote = aliasUsed
+        ? `<div style="margin-bottom:10px;padding:8px 12px;border-radius:10px;background:#eef2ff;color:var(--blue-text);font-size:12px;font-weight:700">'${original}' 검색어를 '${effective}' 키워드로 변환하여 조회했습니다.</div>`
+        : '';
+      openModal('국회도서관 검색 결과', `"${original}"에 대한 검색 결과 ${items.length}건`, `${aliasNote}<div style="max-height:360px;overflow:auto">${rows}</div>`, { hideAction: true });
+    }
+
+    async function runNanetSearch(rawQuery) {
+      const { original, effective, aliasUsed } = resolveSearchAlias(rawQuery);
+      if (!original) {
+        openModal('검색어를 입력해 주세요', '검색어를 입력하면 관련 법안과 발의자가 표시됩니다.');
+        return;
+      }
+      openModal('국회도서관 검색 중...', `"${original}"에 대한 국회도서관 자료를 불러오는 중입니다.`, '<div style="padding:20px;text-align:center;color:var(--muted)">잠시만 기다려 주세요…</div>', { hideAction: true });
+      try {
+        const res = await fetch(`/api/nanet-search?q=${encodeURIComponent(effective)}`);
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const data = await res.json();
+        const items = Array.isArray(data.items) ? data.items : [];
+        renderNanetSearchResult(original, effective, aliasUsed, items);
       } catch (err) {
         openModal('검색 실패', '국회도서관 API 호출에 실패했습니다. 잠시 후 다시 시도해주세요.', `<div style="color:var(--muted);font-size:13px">${escapeSearchHtml(err.message || '')}</div>`, { hideAction: true });
       }
     }
-    document.getElementById('searchBtn').addEventListener('click', () => {
-      const q = document.getElementById('searchInput').value.trim();
-      if (!q) {
-        openModal('검색어를 입력해 주세요', '검색어를 입력하면 관련 법안과 발의자가 표시됩니다.');
-        return;
-      }
-      runNanetSearch(q);
-    });
     document.getElementById('searchInput').addEventListener('keydown', (e) => {
       if (e.key === 'Enter') {
         e.preventDefault();
-        document.getElementById('searchBtn').click();
+        runNanetSearch(document.getElementById('searchInput').value.trim());
       }
     });
 
@@ -277,9 +319,6 @@ const features = Array.from(document.querySelectorAll('.feature'));
       if (gotoSignupLink) gotoSignupLink.addEventListener('click', (e) => { e.preventDefault(); openSignupModal(); });
     }
     document.getElementById('loginNavBtn').addEventListener('click', openLoginModal);
-    document.getElementById('startBannerBtn').addEventListener('click', () => {
-      openModal('무료 시작', '지금 바로 무료 계정으로 핵심 기능을 이용해보세요.');
-    });
 
     document.getElementById('openTrendsModal').addEventListener('click', async () => {
       openModal('전체 최신 동향', '국회에 발의된 법률안을 최신순으로 확인합니다.', '<div style="padding:20px;text-align:center;color:var(--muted)">불러오는 중…</div>', { hideAction: true });

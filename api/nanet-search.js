@@ -1,16 +1,15 @@
-// Vercel Serverless Function: 국회도서관(NANET) 자료검색 Open API 프록시
+// Vercel Serverless Function: 열린국회정보(open.assembly.go.kr) 국회의원 발의법률안 API 프록시
 //
 // 프론트엔드(index.html)의 검색창에서 /api/nanet-search?q=검색어 로 호출합니다.
-// 브라우저에서 직접 국회도서관 API를 호출하면 CORS 차단 + 인증키 노출 문제가 있어
-// 이 서버리스 함수가 대신 호출하고 결과만 JSON으로 정리해 돌려줍니다.
+// 브라우저에서 직접 호출하면 CORS 차단 + 인증키 노출 문제가 있어 이 서버리스 함수가 대신 호출합니다.
 //
 // 사전 준비:
-// 1) https://www.data.go.kr 에서 "국회 국회도서관_자료검색 서비스" 활용신청
-// 2) 발급받은 "일반 인증키(Decoding)" 값을 Vercel 프로젝트 환경변수 NANET_API_KEY 로 등록
-// 3) 실제 요청 URL/파라미터명은 활용신청 승인 후 제공되는 "참고문서"에 명시된 값과
-//    다를 수 있습니다. 아래 NANET_ENDPOINT / 파라미터명이 다르면 이 부분만 맞춰 수정하세요.
+// 1) https://open.assembly.go.kr 에서 회원가입 후 인증키 발급 (마이페이지 > Open API 인증키 발급/확인)
+// 2) 발급받은 인증키를 Vercel 프로젝트 환경변수 NANET_API_KEY 로 등록
+// 3) API: 국회의원 발의법률안 (nzmimeepazxkubdpn), AGE(대수)는 현재 국회 기준 22로 고정
 
-const NANET_ENDPOINT = 'https://apis.data.go.kr/9720000/searchservice/search';
+const BILL_ENDPOINT = 'https://open.assembly.go.kr/portal/openapi/nzmimeepazxkubdpn';
+const CURRENT_AGE = '22';
 
 module.exports = async function handler(req, res) {
   const query = (req.query && req.query.q ? String(req.query.q) : '').trim();
@@ -19,56 +18,43 @@ module.exports = async function handler(req, res) {
     return;
   }
 
-  const serviceKey = process.env.NANET_API_KEY;
-  if (!serviceKey) {
+  const apiKey = process.env.NANET_API_KEY;
+  if (!apiKey) {
     res.status(500).json({ error: 'NANET_API_KEY 환경변수가 설정되지 않았습니다.' });
     return;
   }
 
   const params = new URLSearchParams({
-    serviceKey,
-    kwd: query,
-    displayCount: '10',
-    startCount: '0',
-    systemType: 'SYSTEM_ALL',
+    KEY: apiKey,
+    Type: 'json',
+    pIndex: '1',
+    pSize: '10',
+    AGE: CURRENT_AGE,
+    BILL_NAME: query,
   });
 
   try {
-    const upstream = await fetch(`${NANET_ENDPOINT}?${params.toString()}`);
-    const xml = await upstream.text();
+    const upstream = await fetch(`${BILL_ENDPOINT}?${params.toString()}`);
+    const data = await upstream.json();
 
-    if (!upstream.ok) {
-      res.status(upstream.status).json({ error: '국회도서관 API 호출 실패', detail: xml.slice(0, 300) });
+    const payload = data && data.nzmimeepazxkubdpn;
+    const resultInfo = payload && payload[0] && payload[0].head && payload[0].head[1] && payload[0].head[1].RESULT;
+    if (!payload) {
+      const errInfo = (data && data.RESULT) || {};
+      res.status(200).json({ query, count: 0, items: [], notice: errInfo.MESSAGE || '검색 결과가 없습니다.' });
       return;
     }
 
-    const items = parseNanetXml(xml);
-    res.status(200).json({ query, count: items.length, items });
+    const rows = (payload[1] && payload[1].row) || [];
+    const items = rows.map(row => ({
+      title: row.BILL_NAME || '',
+      author: row.PROPOSER || '',
+      pubYear: (row.PROPOSE_DT || '').slice(0, 4),
+      link: row.DETAIL_LINK || '',
+    }));
+
+    res.status(200).json({ query, count: items.length, items, notice: resultInfo ? resultInfo.MESSAGE : undefined });
   } catch (err) {
-    res.status(502).json({ error: '국회도서관 API 연결 중 오류가 발생했습니다.', detail: String(err && err.message || err) });
+    res.status(502).json({ error: '열린국회정보 API 연결 중 오류가 발생했습니다.', detail: String(err && err.message || err) });
   }
 };
-
-// 간단한 XML -> JSON 파서 (외부 라이브러리 없이 정규식으로 <item>...</item> 블록을 추출)
-// 실제 응답의 태그명(TITLE/AUTHOR/PUB_YEAR 등)이 다르면 아래 필드 매핑만 수정하면 됩니다.
-function parseNanetXml(xml) {
-  const items = [];
-  const itemBlocks = xml.match(/<item>[\s\S]*?<\/item>/gi) || [];
-  for (const block of itemBlocks) {
-    items.push({
-      title: pickTag(block, 'title') || pickTag(block, 'titleInfo'),
-      author: pickTag(block, 'author') || pickTag(block, 'authorInfo'),
-      pubYear: pickTag(block, 'pubYear') || pickTag(block, 'issuedDate'),
-      link: pickTag(block, 'link') || pickTag(block, 'detailLink'),
-    });
-  }
-  return items;
-}
-
-function pickTag(block, tag) {
-  const match = block.match(new RegExp(`<${tag}>([\\s\\S]*?)<\\/${tag}>`, 'i'));
-  if (!match) return '';
-  return match[1]
-    .replace(/<!\[CDATA\[([\s\S]*?)\]\]>/, '$1')
-    .trim();
-}

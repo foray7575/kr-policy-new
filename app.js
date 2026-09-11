@@ -103,7 +103,7 @@ const features = Array.from(document.querySelectorAll('.feature'));
       renderTrendsToSide().then(() => { btn.textContent = '새로고침'; });
     });
 
-    // Hero lede area: monthly bill proposal trend chart (with single-month filter)
+    // Hero lede area: monthly bill proposal trend chart (with cumulative up-to-month filter)
     const billTrendChartEl = document.getElementById('billTrendChart');
     const billTrendSelectEl = document.getElementById('billTrendMonthSelect');
     const BILL_TREND_ALL = 'all';
@@ -115,10 +115,9 @@ const features = Array.from(document.querySelectorAll('.feature'));
       return `${parseInt(m, 10)}월`;
     }
 
-    function renderBillTrendAll() {
-      const maxCount = Math.max(1, ...billTrendMonths.map(m => m.count));
-      billTrendChartEl.classList.remove('single-mode');
-      billTrendChartEl.innerHTML = billTrendMonths.map(m => {
+    function renderBillTrendBars(monthsList, globalMax) {
+      const maxCount = globalMax || Math.max(1, ...monthsList.map(m => m.count));
+      billTrendChartEl.innerHTML = monthsList.map(m => {
         const heightPct = Math.max(4, Math.round((m.count / maxCount) * 100));
         return `
           <div class="bill-trend-bar-col" title="${m.month} · ${m.count}건">
@@ -129,39 +128,27 @@ const features = Array.from(document.querySelectorAll('.feature'));
       }).join('');
     }
 
-    function renderBillTrendSingle(monthKey) {
-      const found = billTrendMonths.find(m => m.month === monthKey);
-      billTrendChartEl.classList.add('single-mode');
-      if (!found) {
-        billTrendChartEl.innerHTML = '<div style="color:var(--muted);font-size:13px">해당 월의 데이터가 없습니다.</div>';
-        return;
-      }
-      billTrendChartEl.innerHTML = `
-        <div class="bill-trend-single">
-          <div><span class="bill-trend-single-value">${found.count}</span><span class="bill-trend-single-unit">건</span></div>
-          <div class="bill-trend-single-label">${found.month} (${formatMonthLabel(found.month)}) 법안 발의 건수</div>
-        </div>`;
-    }
-
     function renderBillTrendChart(selectedValue) {
       if (!billTrendChartEl) return;
       if (!billTrendMonths.length) {
-        billTrendChartEl.classList.remove('single-mode');
         billTrendChartEl.innerHTML = '<div style="color:var(--muted);font-size:13px;padding:8px 0">월간 발의 추이를 불러오지 못했습니다.</div>';
         return;
       }
+      const globalMax = Math.max(1, ...billTrendMonths.map(m => m.count));
       if (!selectedValue || selectedValue === BILL_TREND_ALL) {
-        renderBillTrendAll();
-      } else {
-        renderBillTrendSingle(selectedValue);
+        renderBillTrendBars(billTrendMonths, globalMax);
+        return;
       }
+      // 선택한 월까지 누적(해당 월 포함, 그 이전 월들)만 표시
+      const upToSelected = billTrendMonths.filter(m => m.month <= selectedValue);
+      renderBillTrendBars(upToSelected.length ? upToSelected : billTrendMonths, globalMax);
     }
 
     function populateBillTrendSelect(selectedValue) {
       if (!billTrendSelectEl) return;
       const allOption = `<option value="${BILL_TREND_ALL}"${selectedValue === BILL_TREND_ALL ? ' selected' : ''}>전체 12개월 보기</option>`;
       const monthOptions = billTrendMonths.map(m =>
-        `<option value="${m.month}"${m.month === selectedValue ? ' selected' : ''}>${m.month} (${m.count}건)</option>`
+        `<option value="${m.month}"${m.month === selectedValue ? ' selected' : ''}>${m.month}까지</option>`
       ).join('');
       billTrendSelectEl.innerHTML = allOption + monthOptions;
     }

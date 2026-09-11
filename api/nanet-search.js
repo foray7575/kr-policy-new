@@ -50,6 +50,10 @@ module.exports = async function handler(req, res) {
       title: row.BILL_NAME || '',
       author: row.PROPOSER || '',
       pubYear: (row.PROPOSE_DT || '').slice(0, 4),
+      pubDate: row.PROPOSE_DT || '',
+      committee: row.COMMITTEE || '',
+      status: row.PROC_RESULT || row.LAW_PROC_RESULT_CD || row.CMT_PROC_RESULT_CD || '',
+      billNo: row.BILL_NO || '',
       link: row.DETAIL_LINK || '',
     }));
 

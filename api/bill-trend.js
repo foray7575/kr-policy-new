@@ -1,0 +1,1 @@
+__FILE__:/tmp/krpolicy/bill-trend.js

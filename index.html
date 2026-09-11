@@ -1,1 +1,1328 @@
-index.html
+<!doctype html>
+<html lang="ko">
+
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>KR Policy — 정책과 정치인을 쉽게 찾는 시작점</title>
+  <style>
+    /* --- 기본 리셋 --- */
+    :root {
+      --bg: #f6f7f9;
+      --paper: #ffffff;
+      --muted: #6b7280;
+      --accent: #0ea5a3;
+      --accent-2: #ef4444;
+      --card-border: rgba(15, 23, 42, 0.06);
+      --shadow: rgba(2, 6, 23, 0.08);
+      --radius: 10px;
+      --maxw: 1100px;
+      --news-accent: #111827;
+      --blue-primary: #1e40af;
+      --blue-dark: #1e3a8a;
+      --blue-light: #3b82f6;
+      --blue-text: #1e3a8a;
+    }
+
+    * {
+      box-sizing: border-box
+    }
+
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Noto Sans KR", "Helvetica Neue", Arial;
+      background: var(--bg);
+      color: var(--news-accent);
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+      line-height: 1.5;
+      padding: 22px;
+      display: flex;
+      justify-content: center;
+    }
+
+    a {
+      color: inherit;
+      text-decoration: none
+    }
+
+    .wrap {
+      width: 100%;
+      max-width: var(--maxw);
+      margin: 0 auto;
+    }
+
+    /* --- 배너: 세련된 그라데이션과 타이포그래피 중심 --- */
+    .banner {
+      background: #1e40af;
+      background: linear-gradient(135deg, #1e40af 0%, #1e3a8a 100%);
+      position: relative;
+      border-radius: 20px;
+      padding: 80px 40px;
+      margin-bottom: 30px;
+      box-shadow: 0 20px 50px rgba(30, 64, 175, 0.2);
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+
+    /* 장식용 배경 요소 */
+    .banner::before {
+      content: 'POLITICS';
+      position: absolute;
+      top: 10px;
+      left: 20px;
+      font-size: 140px;
+      font-weight: 900;
+      color: rgba(255, 255, 255, 0.03);
+      z-index: 0;
+      pointer-events: none;
+      letter-spacing: 10px;
+      white-space: nowrap;
+    }
+
+    .banner::after {
+      content: '';
+      position: absolute;
+      bottom: -50px;
+      left: -50px;
+      width: 250px;
+      height: 250px;
+      background: radial-gradient(circle, rgba(59, 130, 246, 0.2) 0%, transparent 70%);
+      border-radius: 50%;
+      z-index: 0;
+    }
+
+    .banner-content {
+      position: relative;
+      z-index: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 24px;
+    }
+
+    .banner-text {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .banner-text h1 {
+      margin: 0;
+      font-size: 64px;
+      font-weight: 900;
+      color: #fff;
+      letter-spacing: -3px;
+      line-height: 0.9;
+      text-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+    }
+
+    .banner-text p {
+      margin: 0;
+      font-size: 19px;
+      color: rgba(255, 255, 255, 0.85);
+      font-weight: 500;
+      letter-spacing: -0.5px;
+    }
+
+    .banner-cta {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      margin-top: 10px;
+    }
+
+    .banner-btn {
+      background: rgba(255, 255, 255, 0.1);
+      color: #fff;
+      border: 1px solid rgba(255, 255, 255, 0.25);
+      padding: 14px 24px;
+      border-radius: 12px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all .2s ease;
+      backdrop-filter: blur(10px);
+    }
+
+    .banner-btn:hover {
+      background: rgba(255, 255, 255, 0.2);
+      transform: translateY(-2px);
+      border-color: rgba(255, 255, 255, 0.4);
+    }
+
+    .banner-btn.primary {
+      background: #fff;
+      color: var(--blue-primary);
+      border: 1px solid #fff;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+    }
+
+    .banner-btn.primary:hover {
+      background: #f8fafc;
+      box-shadow: 0 15px 35px rgba(0, 0, 0, 0.2);
+    }
+
+    /* --- 나머지 레이아웃 --- */
+    .hero {
+      display: grid;
+      grid-template-columns: 1fr 360px;
+      gap: 24px;
+      align-items: start;
+      margin-bottom: 30px;
+    }
+
+    .main-article {
+      background: var(--paper);
+      border-radius: 16px;
+      padding: 24px;
+      box-shadow: 0 10px 40px var(--shadow);
+      border: 1px solid var(--card-border);
+    }
+
+    .kicker {
+      color: var(--blue-primary);
+      font-weight: 700;
+      font-size: 14px;
+      letter-spacing: 1px;
+      margin-bottom: 12px;
+      display: inline-block;
+      border-bottom: 2px solid var(--blue-primary);
+    }
+
+    .headline {
+      font-size: 30px;
+      margin: 0 0 16px 0;
+      font-weight: 800;
+      color: var(--blue-text);
+      line-height: 1.3;
+    }
+
+    .lede {
+      color: var(--muted);
+      margin: 0 0 20px 0;
+      font-size: 16px;
+      line-height: 1.6;
+    }
+
+    .side-card {
+      background: var(--paper);
+      border-radius: 16px;
+      padding: 24px;
+      border: 1px solid var(--card-border);
+      box-shadow: 0 10px 30px var(--shadow);
+    }
+
+    .side-card h3 {
+      margin: 0 0 16px 0;
+      font-size: 18px;
+      color: var(--blue-text);
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .top-list {
+      display: flex;
+      flex-direction: column;
+      gap: 12px
+    }
+
+    .top-item {
+      display: flex;
+      gap: 14px;
+      align-items: flex-start;
+      padding: 12px;
+      border-radius: 12px;
+      transition: background 0.2s ease;
+    }
+
+    .top-item:hover {
+      background: #f8fafc;
+    }
+
+    .pill {
+      font-size: 12px;
+      padding: 6px 12px;
+      border-radius: 999px;
+      background: rgba(30, 64, 175, 0.08);
+      color: var(--blue-primary);
+      font-weight: 700
+    }
+
+    .search-row {
+      display: flex;
+      gap: 12px;
+      margin-top: 24px;
+      align-items: center;
+    }
+
+    .search-box {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      background: #f8fafc;
+      border-radius: 14px;
+      padding: 12px 16px;
+      flex: 1;
+      border: 2px solid transparent;
+      transition: all 0.2s ease;
+    }
+
+    .search-box:focus-within {
+      background: #fff;
+      border-color: var(--blue-primary);
+      box-shadow: 0 0 0 4px rgba(30, 64, 175, 0.1);
+    }
+
+    .search-box input {
+      border: none;
+      outline: none;
+      font-size: 15px;
+      color: var(--news-accent);
+      background: transparent;
+      width: 100%;
+    }
+
+    .search-button {
+      background: var(--blue-primary);
+      color: #fff;
+      border: none;
+      padding: 14px 28px;
+      border-radius: 14px;
+      font-weight: 700;
+      cursor: pointer;
+      box-shadow: 0 4px 15px rgba(30, 64, 175, 0.2);
+    }
+
+    /* --- 핵심 기능 --- */
+    .features {
+      margin-top: 24px;
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 20px;
+    }
+
+    .feature {
+      background: var(--paper);
+      border-radius: 20px;
+      padding: 30px;
+      border: 1px solid var(--card-border);
+      box-shadow: 0 8px 30px var(--shadow);
+      cursor: pointer;
+      transition: all 0.3s ease;
+      position: relative;
+    }
+
+    .feature:hover {
+      transform: translateY(-10px);
+      box-shadow: 0 25px 50px var(--shadow);
+      border-color: rgba(30, 64, 175, 0.2);
+    }
+
+    .feature .head {
+      display: flex;
+      flex-direction: row;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .feature-icon {
+      width: 54px;
+      height: 54px;
+      border-radius: 16px;
+      background: #f8fafc;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      transition: all 0.3s ease;
+      color: var(--blue-primary);
+    }
+
+    .feature:hover .feature-icon {
+      background: var(--blue-primary);
+      color: #fff;
+      transform: scale(1.1) rotate(-5deg);
+    }
+
+    .feature h3 {
+      margin: 0;
+      font-size: 19px;
+      font-weight: 800;
+      color: var(--blue-text)
+    }
+
+    .feature p {
+      margin: 4px 0 0 0;
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.5;
+    }
+
+    .feature .extra {
+      margin-top: 16px;
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height .4s ease;
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    .feature.open .extra {
+      max-height: 400px
+    }
+
+    .chips {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-top: 10px
+    }
+
+    .chip {
+      padding: 8px 12px;
+      border-radius: 999px;
+      background: rgba(30, 64, 175, 0.08);
+      font-size: 13px;
+      color: var(--blue-text);
+      border: 1px solid rgba(30, 64, 175, 0.12);
+      font-weight: 600
+    }
+
+    .post {
+      padding: 12px;
+      border-radius: 12px;
+      border: 1px solid rgba(30, 64, 175, 0.1);
+      background: linear-gradient(180deg, rgba(30, 64, 175, 0.01), rgba(30, 64, 175, 0.00));
+      margin-top: 10px
+    }
+
+    .post .title {
+      font-weight: 700;
+      font-size: 15px;
+      color: var(--blue-text)
+    }
+
+    .post .meta {
+      font-size: 13px;
+      color: var(--muted);
+      margin-top: 8px
+    }
+
+    .small-btn {
+      padding: 8px 12px;
+      border-radius: 10px;
+      border: 1px solid rgba(30, 64, 175, 0.2);
+      background: transparent;
+      font-weight: 700;
+      cursor: pointer;
+      color: var(--blue-text);
+      transition: all 0.2s ease;
+    }
+
+    .small-btn:hover {
+      background: rgba(30, 64, 175, 0.05);
+      border-color: var(--blue-primary);
+    }
+
+    .cta-bar {
+      margin-top: 30px;
+      display: flex;
+      justify-content: space-between;
+      gap: 16px;
+      align-items: center;
+      background: rgba(30, 64, 175, 0.03);
+      padding: 20px 30px;
+      border-radius: 20px;
+    }
+
+    .subscribe {
+      background: var(--blue-primary);
+      color: #fff;
+      padding: 14px 28px;
+      border-radius: 14px;
+      border: none;
+      cursor: pointer;
+      font-weight: 800;
+      box-shadow: 0 4px 15px rgba(30, 64, 175, 0.2);
+    }
+
+    .subscribe:hover {
+      background: var(--blue-dark);
+      transform: scale(1.02);
+    }
+
+    footer {
+      margin-top: 40px;
+      padding-top: 20px;
+      border-top: 1px solid var(--card-border);
+      color: var(--muted);
+      font-size: 14px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 12px
+    }
+
+    @media (max-width:1020px) {
+      .hero {
+        grid-template-columns: 1fr 320px
+      }
+
+      .features {
+        grid-template-columns: repeat(2, 1fr)
+      }
+
+      .banner-content {
+        flex-direction: column;
+        text-align: center;
+        align-items: center;
+      }
+
+      .banner-text h1 {
+        font-size: 48px;
+      }
+
+      .banner-cta {
+        justify-content: center
+      }
+    }
+
+    @media (max-width:760px) {
+      .hero {
+        grid-template-columns: 1fr
+      }
+
+      .features {
+        grid-template-columns: 1fr
+      }
+
+      .banner {
+        padding: 40px 24px
+      }
+
+      .banner-text h1 {
+        font-size: 40px
+      }
+
+      .banner::before {
+        font-size: 80px;
+        top: 0;
+        left: 10px;
+      }
+    }
+
+    .feature:focus {
+      outline: 3px solid rgba(30, 64, 175, 0.2)
+    }
+
+    /* 모달 */
+    #modal {
+      position: fixed;
+      left: 0;
+      top: 0;
+      right: 0;
+      bottom: 0;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      background: rgba(2, 6, 23, 0.6);
+      z-index: 80;
+      padding: 18px;
+      backdrop-filter: blur(4px);
+    }
+
+    #modal>div {
+      width: 100%;
+      max-width: 560px;
+      background: var(--paper);
+      border-radius: 20px;
+      padding: 30px;
+      border: 1px solid var(--card-border);
+      box-shadow: 0 40px 100px rgba(0, 0, 0, 0.2);
+    }
+
+    #modal h3 {
+      color: var(--blue-text);
+      font-weight: 800;
+      font-size: 24px;
+    }
+  
+    /* --- 미리보기 전용: KR Policy 타이틀 중심 원형 오비트 --- */
+    .banner.title-orbit-preview {
+      min-height: 520px;
+      align-items: center;
+      border-radius: 0;
+      background: transparent;
+      border: 0;
+      box-shadow: none;
+      overflow: visible;
+      justify-content: center;
+      position: relative;
+      z-index: 1;
+    }
+
+    .banner.title-orbit-preview::before {
+      content: '';
+      position: absolute;
+      inset: 10%;
+      width: 80%;
+      height: 80%;
+      margin: auto;
+      border: 1px solid rgba(155, 223, 255, .14);
+      border-radius: 50%;
+      letter-spacing: 0;
+      font-size: 0;
+      box-shadow: 0 0 55px rgba(85, 230, 255, .12), inset 0 0 35px rgba(85, 230, 255, .06);
+      transform: rotate(-38deg);
+    }
+
+    .banner.title-orbit-preview::after {
+      content: '';
+      position: absolute;
+      width: 72%;
+      height: 30%;
+      left: 14%;
+      top: 35%;
+      border: 1px solid rgba(85, 230, 255, .65);
+      border-radius: 50%;
+      background: transparent;
+      transform: rotate(-24deg);
+      box-shadow: 0 0 24px rgba(85, 230, 255, .14);
+    }
+
+    .title-orbit-preview .banner-content { align-items: center; text-align: center; padding: 18px 0 26px; }
+    .title-orbit-preview .banner-text { align-items: center; position: relative; z-index: 2; }
+    .title-orbit-preview .banner-text h1 {
+      position: relative;
+      display: block;
+      padding: .12em .08em .16em;
+      margin: 0;
+      font-size: clamp(56px, 10vw, 108px);
+      line-height: 1.02;
+      letter-spacing: -6px;
+      overflow: visible;
+      background: linear-gradient(105deg, #e3e3e3 10%, #55e6ff 48%, #c1b9ff 80%);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+      text-shadow: 0 0 38px rgba(85, 230, 255, .25);
+    }
+
+    .title-orbit-preview .banner-text h1::before,
+    .title-orbit-preview .banner-text h1::after {
+      content: '';
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      width: 235%;
+      height: 235%;
+      border: 1px solid rgba(140, 123, 255, .48);
+      border-radius: 50%;
+      transform: translate(-50%, -50%) rotate(42deg);
+      z-index: -1;
+      pointer-events: none;
+    }
+
+    .title-orbit-preview .banner-text h1::after {
+      width: 285%;
+      height: 285%;
+      border-color: rgba(255, 98, 192, .28);
+      transform: translate(-50%, -50%) rotate(72deg);
+    }
+
+    .title-orbit-preview .banner-text p { color: rgba(180, 215, 245, .82); letter-spacing: .16em; text-transform: uppercase; }
+    .title-orbit-preview .banner-cta { position: relative; z-index: 3; }
+
+  
+    /* --- 원형 타이틀과 유기적인 CTA 배경 가시성 보강 --- */
+    .title-orbit-preview .banner-btn {
+      background: rgba(35, 68, 125, .78);
+      border-color: rgba(143, 203, 255, .58);
+      color: #f3f8ff;
+      box-shadow: 0 5px 16px rgba(0, 0, 0, .22), inset 0 0 14px rgba(85, 230, 255, .12);
+    }
+
+    .title-orbit-preview .banner-btn:hover,
+    .title-orbit-preview .banner-btn:focus-visible {
+      background: rgba(52, 101, 169, .9);
+      border-color: rgba(190, 239, 255, .9);
+      box-shadow: 0 0 18px rgba(85, 230, 255, .38), 0 8px 18px rgba(0, 0, 0, .25);
+      outline: none;
+    }
+
+    .title-orbit-preview .banner-btn.primary {
+      background: rgba(218, 247, 255, .96);
+      color: #123265;
+      border-color: rgba(220, 250, 255, 1);
+      box-shadow: 0 0 18px rgba(85, 230, 255, .34), 0 5px 16px rgba(0, 0, 0, .2);
+    }
+
+    .title-orbit-preview .banner-btn.primary:hover,
+    .title-orbit-preview .banner-btn.primary:focus-visible {
+      background: #fff;
+      color: #0e2860;
+      box-shadow: 0 0 24px rgba(85, 230, 255, .54), 0 8px 20px rgba(0, 0, 0, .24);
+    }
+
+    .title-orbit-preview .banner-btn:last-child {
+      background: rgba(82, 62, 129, .8);
+      border-color: rgba(221, 159, 236, .62);
+      box-shadow: 0 5px 16px rgba(0, 0, 0, .22), inset 0 0 14px rgba(255, 98, 192, .1);
+    }
+
+    .title-orbit-preview .banner-btn:last-child:hover,
+    .title-orbit-preview .banner-btn:last-child:focus-visible {
+      background: rgba(119, 73, 144, .92);
+      border-color: rgba(255, 204, 239, .9);
+      box-shadow: 0 0 20px rgba(255, 98, 192, .36), 0 8px 18px rgba(0, 0, 0, .25);
+    }
+
+  
+    /* --- 인터페이스가 타이틀 오비트보다 위에 오도록 --- */
+    .hero, .typing-slide, footer { position: relative; z-index: 20; }
+
+    /* --- 정책 타자 체험: 한컴타자 스타일의 밝고 또렷한 UI --- */
+    .typing-slide {
+      position: relative;
+      isolation: isolate;
+      margin-top: 30px;
+      padding: 30px;
+      border-radius: 22px;
+      background: #ffffff;
+      border: 2px solid #cfe0ff;
+      box-shadow: 0 14px 34px rgba(28, 108, 232, .12);
+      overflow: hidden;
+      isolation: isolate;
+    }
+    .typing-slide:before {
+      content: 'POLICY TYPING';
+      position: absolute;
+      right: 22px;
+      top: 20px;
+      color: #ff8a00;
+      font-size: 11px;
+      font-weight: 800;
+      letter-spacing: .16em;
+    }
+    .typing-slide:after {
+      content: '';
+      position: absolute;
+      left: 0; right: 0; top: 0;
+      height: 4px;
+      background: linear-gradient(90deg, #1c6ce8, #55c6ff, #ff8a00);
+    }
+    .typing-slide .typing-kicker { color: #1c6ce8; font-size: 12px; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; }
+    .typing-slide .typing-kicker:before { content: '\25CF '; color: #ff8a00; }
+    .typing-slide h2 { margin: 8px 0 8px; color: #0f2a63; font-size: 25px; font-weight: 900; }
+    .typing-slide .typing-lede { margin: 0 0 18px; color: #55648a; line-height: 1.65; }
+
+    .typing-orbit { display:flex; justify-content:center; gap:18px; margin: 4px 0 18px; }
+    .typing-orbit-dot { width:14px; height:14px; border-radius:50%; background:#e3ecff; border:2px solid #b7cdf6; transition:all .25s ease; }
+    .typing-orbit-dot.active { background:#ff8a00; border-color:#ff8a00; box-shadow:0 0 14px rgba(255,138,0,.55); transform:scale(1.25); }
+    .typing-orbit-dot.done { background:#1fae56; border-color:#1fae56; box-shadow:0 0 12px rgba(31,174,86,.45); }
+
+    .typing-status { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin-top: 14px; font-size: 13px; }
+    .typing-stat { padding: 8px 14px; border-radius: 999px; background: #eaf2ff; color: #14488f; font-weight: 800; border: 1px solid #cddffb; }
+
+    .typing-policy {
+      padding: 20px;
+      border-radius: 16px;
+      background: #f3f7ff;
+      border: 2px solid #cfe0ff;
+      color: #1c2c52;
+      font-size: 19px;
+      line-height: 2;
+      font-weight: 700;
+      font-family: 'Consolas', 'SFMono-Regular', 'Noto Sans KR', monospace;
+      letter-spacing: .01em;
+    }
+    .typing-policy .char { border-bottom: 2px solid transparent; padding-bottom: 1px; }
+    .typing-policy .char.correct { color: #1fae56; background: rgba(31,174,86,.12); border-radius: 3px; }
+    .typing-policy .char.wrong { color: #ef4444; background: rgba(239,68,68,.14); border-radius: 3px; text-decoration: underline wavy #ef4444; }
+    .typing-policy .char.current { border-bottom-color: #1c6ce8; animation: typingCaret 1s step-end infinite; }
+    @keyframes typingCaret { 50% { border-bottom-color: transparent; } }
+
+    .typing-input {
+      width: 100%;
+      margin-top: 14px;
+      padding: 16px;
+      border: 2px solid #aec6f2;
+      border-radius: 14px;
+      background: #fff;
+      color: #12224a;
+      font: inherit;
+      font-family: 'Consolas', 'SFMono-Regular', 'Noto Sans KR', monospace;
+      font-size: 18px;
+      font-weight: 700;
+      outline: none;
+    }
+    .typing-input:focus { border-color: #1c6ce8; box-shadow: 0 0 0 4px rgba(28,108,232,.15); }
+    .typing-input.done { border-color: #1fae56; background: #eefdf3; }
+
+    .typing-actions { display:flex; align-items:center; gap:12px; margin-top:14px; }
+    .typing-slide .small-btn { background:#1c6ce8; color:#fff; border:2px solid #1c6ce8; font-weight:800; }
+    .typing-slide .small-btn:hover { background:#0d47b3; border-color:#0d47b3; }
+
+    .typing-result { display: none; margin-top: 18px; padding: 18px; border-radius: 16px; background: #f3f9ff; border: 2px solid #cfe0ff; color: #14284f; }
+    .typing-result.show { display: block; }
+
+    .typing-score { margin:16px auto 18px; padding:18px 26px; max-width:300px; text-align:center; border-radius:18px; background: linear-gradient(135deg,#eaf2ff,#ffffff); border:2px solid #1c6ce8; box-shadow: 0 10px 24px rgba(28,108,232,.18); color:#0f2a63; }
+    .typing-score strong { display:block; font-size:44px; line-height:1; color:#1c6ce8; }
+    .typing-score span { display:block; margin-top:8px; font-weight:800; }
+
+    .typing-review { display:grid; gap:9px; margin-top:14px; text-align:left; }
+    .typing-review-row { padding:12px 14px; border-radius:12px; background:#fff; border:1px solid #dbe6fb; border-left: 5px solid #1fae56; color:#1c2c52; font-size:13px; line-height:1.6; }
+    .typing-review-row strong { display:block; margin-bottom:3px; }
+    .typing-review-row.incomplete { border-left-color:#ff8a00; background:#fff8ef; }
+    .typing-review-row.wrong { border-left-color:#ef4444; background:#fff4f4; }
+    .typing-analysis { margin-top:8px; padding:10px 12px; border-radius:10px; background:#f4f8ff; color:#4a5a80; font-size:12px; }
+    .typing-analysis em { color:#1c6ce8; font-style:normal; font-weight:800; }
+
+  </style>
+</head>
+
+<body>
+  <div class="wrap" role="main">
+    <!-- 배너 섹션 -->
+    <section class="banner title-orbit-preview" aria-label="KR Policy 원형 타이틀 미리보기">
+      <div class="banner-content">
+        <div class="banner-text">
+          <h1>KR Policy</h1>
+          <p>정책을 쉽고 투명하게, 정치의 문턱을 낮추는 시작점</p>
+        </div>
+        <div class="banner-cta">
+          <button class="banner-btn primary" id="startBannerBtn">무료로 시작하기</button>
+          <button class="banner-btn" id="demoBannerBtn">데모 체험</button>
+          <button class="banner-btn" id="signupBannerBtn">회원가입</button>
+        </div>
+      </div>
+    </section>
+
+    <section class="hero" aria-labelledby="hero-title">
+      <article class="main-article" aria-labelledby="hero-title">
+        <div class="kicker">KR Policy · 요약</div>
+        <h2 id="hero-title" class="headline">정책과 발의자, 이제는 뉴스처럼 빠르게 파악하세요</h2>
+        <p class="lede">최근 정책 수립 동향과 발의자 정보를 뉴스 편집 방식으로 정리해 제공합니다. 정치에 익숙하지 않은 사람도 자연스럽게 따라올 수 있도록 교육적 설명과 맥락을 제공합니다.
+        </p>
+
+        <div class="search-row" role="search" aria-label="정책 및 정치인 검색">
+          <div class="search-box" aria-hidden="false">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true" style="opacity:0.7">
+              <path d="M21 21l-4.35-4.35" stroke="#1e40af" stroke-width="2" stroke-linecap="round"
+                stroke-linejoin="round" />
+              <circle cx="11" cy="11" r="6" stroke="#1e40af" stroke-width="2" stroke-linecap="round"
+                stroke-linejoin="round" />
+            </svg>
+            <input id="searchInput" type="search" placeholder="정책·법안 · 정치인 · 키워드 입력(예: 탄소중립)" aria-label="검색어 입력" />
+            <select id="searchScope" aria-label="검색 범위"
+              style="border:none;outline:none;background:transparent;color:var(--muted);font-weight:600">
+              <option value="policy">정책·법안</option>
+              <option value="politician">정치인</option>
+              <option value="updates">최신 동향</option>
+            </select>
+          </div>
+          <button class="search-button" id="searchBtn">검색</button>
+        </div>
+
+        <div style="margin-top:18px;display:flex;gap:12px;align-items:center;flex-wrap:wrap">
+          <div class="pill">목표: 접근성 · 신뢰성 · 교육</div>
+          <div style="color:var(--muted);font-size:14px">공공 API 및 뉴스 데이터를 연결해 실시간으로 갱신됩니다.</div>
+        </div>
+      </article>
+
+      <aside class="side-card" aria-label="사이드 최신 소식">
+        <h3>최신 소식</h3>
+        <div style="display:flex;gap:10px;align-items:center;margin-bottom:12px">
+          <button class="small-btn" id="refreshTrends">새로고침</button>
+          <div style="color:var(--muted);font-size:13px">실시간 의안·뉴스 헤드라인</div>
+        </div>
+
+        <div class="top-list" id="trendList" aria-live="polite">
+          <!-- 동적으로 채워짐 -->
+        </div>
+
+        <div style="margin-top:16px;display:flex;gap:10px;align-items:center">
+          <button class="small-btn" id="openSubscribe">구독하기</button>
+          <button class="small-btn" id="openCommunity">게시판 보기</button>
+        </div>
+      </aside>
+    </section>
+
+    <!-- 핵심 기능 (인터랙티브) -->
+    <section aria-labelledby="features-title">
+      <h2 id="features-title" style="font-size:22px;margin:0 0 16px 0;font-weight:800;color:var(--blue-text)">핵심 기능</h2>
+
+      <div class="features" role="list">
+        <!-- 검색 필터 -->
+        <div class="feature" id="feat-search" role="button" tabindex="0" aria-expanded="false"
+          aria-controls="search-extra">
+          <div class="head">
+            <div class="feature-icon">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+                stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="11" cy="11" r="8"></circle>
+                <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+              </svg>
+            </div>
+            <div>
+              <h3>검색 필터 · 알림</h3>
+              <p>키워드, 발의자, 위원회 등으로 정교하게 필터링</p>
+            </div>
+          </div>
+
+          <div class="extra" id="search-extra">
+            <div class="chips" aria-hidden="false">
+              <div class="chip">발의자: 홍길동</div>
+              <div class="chip">위원회: 환경소위원회</div>
+              <div class="chip">상태: 심사중</div>
+              <div class="chip">기간: 2025-01 ~ 2026-06</div>
+            </div>
+
+            <p style="margin-top:12px;color:var(--blue-text);font-weight:600">예시: 관심 키워드를 추가하면 해당 키워드의 의안이 등록되거나 상태가 변경될
+              때 알림을 받을 수 있습니다.</p>
+
+            <div style="margin-top:14px;display:flex;gap:10px">
+              <button class="small-btn" id="demoAddAlert">알림 추가</button>
+              <button class="small-btn" id="demoExport">CSV 다운로드</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- 최신 동향 -->
+        <div class="feature" id="feat-trends" role="button" tabindex="0" aria-expanded="false"
+          aria-controls="trends-extra">
+          <div class="head">
+            <div class="feature-icon">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+                stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="23 6 13.5 15.5 8.5 10.5 1 18"></polyline>
+                <polyline points="17 6 23 6 23 12"></polyline>
+              </svg>
+            </div>
+            <div>
+              <h3>최신 동향 · 트렌드</h3>
+              <p>따끈따끈한 의안·언론 헤드라인을 우선 제공</p>
+            </div>
+          </div>
+
+          <div class="extra" id="trends-extra">
+            <div id="trendsContent">
+              <!-- 동적 트렌드 리스트 -->
+            </div>
+            <div style="margin-top:14px;display:flex;gap:10px">
+              <button class="small-btn" id="refreshInline">새로고침</button>
+              <button class="small-btn" id="openTrendsModal">전체 보기</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- 커뮤니티 -->
+        <div class="feature" id="feat-community" role="button" tabindex="0" aria-expanded="false"
+          aria-controls="comm-extra">
+          <div class="head">
+            <div class="feature-icon">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+                stroke-linecap="round" stroke-linejoin="round">
+                <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+              </svg>
+            </div>
+            <div>
+              <h3>커뮤니티 · 게시판</h3>
+              <p>사용자 의견, 분석 토론, 자료 공유</p>
+            </div>
+          </div>
+
+          <div class="extra" id="comm-extra">
+            <div id="postsArea">
+              <!-- 예시 게시물 -->
+              <div class="post">
+                <div class="title">[분석] 최근 탄소중립 법안의 쟁점</div>
+                <div class="meta">작성자: 단추 · 2026-06-05 · 댓글 4</div>
+              </div>
+              <div class="post">
+                <div class="title">교육개혁 관련 발의자 비교 자료</div>
+                <div class="meta">작성자: 연구생 · 2026-06-02 · 댓글 2</div>
+              </div>
+            </div>
+
+            <div style="margin-top:14px;display:flex;gap:10px">
+              <button class="small-btn" id="openNewPost">새 글 작성</button>
+              <button class="small-btn" id="openCommunityFull">전체 게시판</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="cta-bar">
+        <div style="color:var(--news-accent);font-size:15px;font-weight:700">교육용 데이터 패키지 · API 접근 · 기관 할인 제공</div>
+        <div>
+          <button class="subscribe" id="subscribeBtn">월정액 요금제 보기</button>
+        </div>
+      </div>
+    </section>
+
+
+    <section class="typing-slide" aria-labelledby="typing-title">
+      <div class="typing-kicker">POLICY TYPING EXPERIENCE</div>
+      <h2 id="typing-title">노란봉투법, 짧게 나눠 입력해보세요</h2>
+      <p class="typing-lede">긴 설명을 3개의 짧은 문장으로 나눴습니다. 각 문장을 입력하고 확인하면 다음 문장으로 빠르게 넘어갑니다.</p>
+      <div class="typing-orbit" aria-label="문장 진행 상태"><span class="typing-orbit-dot active"></span><span class="typing-orbit-dot"></span><span class="typing-orbit-dot"></span></div>
+      <div class="typing-status"><span class="typing-stat" id="typingRound">1 / 3</span><span class="typing-stat" id="typingTimer">시간 0.0초</span></div>
+      <div class="typing-policy" id="typingTarget" aria-live="off"></div>
+      <input class="typing-input" id="typingInput" type="text" autocomplete="off" placeholder="정책 문장을 입력하고 Enter를 누르세요." aria-label="정책 본문 입력">
+      <div class="typing-actions"><button class="small-btn" id="typingReset">다시 시작</button><span style="color:var(--muted);font-size:13px">Enter: 다음 문장</span></div>
+      <div class="typing-result" id="typingResult" role="status"></div>
+    </section>
+    <footer>
+      <div><strong>© KR Policy</strong> — 정치정보의 진입 장벽을 낮춥니다.</div>
+      <div class="muted">개인정보처리방침 · 이용약관 · (데모 페이지)</div>
+    </footer>
+  </div>
+
+  <!-- 공통 모달 -->
+  <div id="modal" role="dialog" aria-modal="true" aria-hidden="true">
+    <div>
+      <h3 id="modalTitle" style="margin:0 0 8px 0">제목</h3>
+      <p id="modalDesc" style="margin:0 0 16px 0;color:var(--muted);line-height:1.6"></p>
+
+      <div id="modalBody">
+        <!-- 동적 내용 -->
+      </div>
+
+      <div style="margin-top:20px;display:flex;gap:12px;justify-content:flex-end">
+        <button class="small-btn" id="modalCancel">닫기</button>
+        <button class="small-btn" id="modalAction"
+          style="background:var(--blue-primary);color:#fff;border:none">확인</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const features = Array.from(document.querySelectorAll('.feature'));
+    const trendList = document.getElementById('trendList');
+    const trendsContent = document.getElementById('trendsContent');
+    const modal = document.getElementById('modal');
+    const modalTitle = document.getElementById('modalTitle');
+    const modalDesc = document.getElementById('modalDesc');
+    const modalBody = document.getElementById('modalBody');
+    const modalCancel = document.getElementById('modalCancel');
+    const modalAction = document.getElementById('modalAction');
+
+    // --- 카드 클릭으로 열기/닫기 ---
+    features.forEach(f => {
+      const updateAria = (open) => {
+        f.setAttribute('aria-expanded', open ? 'true' : 'false');
+        if (open) f.classList.add('open'); else f.classList.remove('open');
+      };
+
+      f.addEventListener('click', (e) => {
+        if (e.target.tagName.toLowerCase() === 'button') return;
+        const isOpen = f.classList.contains('open');
+        if (!isOpen) {
+          features.forEach(x => { if (x !== f) updateAria(false); });
+          updateAria(true);
+        } else {
+          updateAria(false);
+        }
+      });
+
+      f.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          f.click();
+        }
+      });
+    });
+
+    // --- 최신 동향 ---
+    function generateTrends() {
+      const sample = [
+        { title: '탄소중립 법안, 소위원회 통과 추진', time: '방금' },
+        { title: '교육개혁 관련 공청회 예정', time: '12분 전' },
+        { title: '예산 심사 결과 요약: 복지·환경 우선', time: '1시간 전' },
+        { title: '의안 상태 변경: 개인정보 보호 강화안', time: '어제' }
+      ];
+      for (let i = sample.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [sample[i], sample[j]] = [sample[j], sample[i]];
+      }
+      return sample;
+    }
+
+    function renderTrendsToSide() {
+      const data = generateTrends();
+      trendList.innerHTML = '';
+      data.forEach(d => {
+        const item = document.createElement('div');
+        item.className = 'top-item';
+        item.innerHTML = `<div style="width:6px;height:40px;border-radius:3px;background:var(--blue-primary);opacity:0.6"></div>
+                          <div style="flex:1">
+                            <div style="font-weight:700;color:var(--blue-text)">${d.title}</div>
+                            <div style="color:var(--muted);font-size:13px;margin-top:4px">${d.time}</div>
+                          </div>`;
+        trendList.appendChild(item);
+      });
+    }
+
+    function renderTrendsInline() {
+      const data = generateTrends().slice(0, 3);
+      trendsContent.innerHTML = '';
+      data.forEach(d => {
+        const el = document.createElement('div');
+        el.style.padding = '10px 0';
+        el.style.borderBottom = '1px solid rgba(0,0,0,0.05)';
+        el.innerHTML = `<div style="font-weight:700;color:var(--blue-text)">${d.title}</div><div style="color:var(--muted);font-size:13px;margin-top:4px">${d.time}</div>`;
+        trendsContent.appendChild(el);
+      });
+    }
+
+    renderTrendsToSide();
+    renderTrendsInline();
+
+    document.getElementById('refreshTrends').addEventListener('click', () => {
+      renderTrendsToSide();
+      const btn = document.getElementById('refreshTrends');
+      btn.textContent = '갱신 중...';
+      setTimeout(() => btn.textContent = '새로고침', 900);
+    });
+    document.getElementById('refreshInline').addEventListener('click', () => {
+      renderTrendsInline();
+    });
+
+    // --- 검색: 국회도서관 Open API 연동 ---
+    function escapeSearchHtml(value) {
+      return String(value).replace(/[&<>"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
+    }
+    async function runNanetSearch(query) {
+      openModal('국회도서관 검색 중...', `"${query}"에 대한 국회도서관 자료를 불러오는 중입니다.`, '<div style="padding:20px;text-align:center;color:var(--muted)">잠시만 기다려 주세요…</div>');
+      try {
+        const res = await fetch(`/api/nanet-search?q=${encodeURIComponent(query)}`);
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const data = await res.json();
+        const items = Array.isArray(data.items) ? data.items : [];
+        if (items.length === 0) {
+          openModal('검색 결과 없음', `"${query}"에 대한 국회도서관 검색 결과가 없습니다.`);
+          return;
+        }
+        const rows = items.slice(0, 10).map(item => `
+          <div class="post" style="margin-top:10px">
+            <div class="title">${escapeSearchHtml(item.title || '(제목 없음)')}</div>
+            <div class="meta">${escapeSearchHtml(item.author || '저자 미상')} · ${escapeSearchHtml(item.pubYear || '')}</div>
+            ${item.link ? `<div style="margin-top:8px"><a href="${item.link}" target="_blank" rel="noopener" style="color:var(--blue-primary);font-weight:700">원문/상세 보기 →</a></div>` : ''}
+          </div>`).join('');
+        openModal('국회도서관 검색 결과', `"${query}"에 대한 검색 결과 ${items.length}건`, `<div style="max-height:360px;overflow:auto">${rows}</div>`);
+      } catch (err) {
+        openModal('검색 실패', '국회도서관 API 호출에 실패했습니다. 잠시 후 다시 시도해주세요.', `<div style="color:var(--muted);font-size:13px">${escapeSearchHtml(err.message || '')}</div>`);
+      }
+    }
+    document.getElementById('searchBtn').addEventListener('click', () => {
+      const q = document.getElementById('searchInput').value.trim();
+      const scope = document.getElementById('searchScope').value;
+      if (!q) {
+        openModal('검색어를 입력해 주세요', '검색어를 입력하면 관련 법안과 발의자가 표시됩니다.');
+        return;
+      }
+      if (scope === 'policy') {
+        runNanetSearch(q);
+        return;
+      }
+      openModal('검색 실행 (데모)', `"${q}"에 대한 샘플 결과를 불러왔습니다. 실제 서비스는 공공 API 연동이 필요합니다.`);
+    });
+
+    // --- 모달 유틸리티 ---
+    function openModal(title, desc, bodyHTML) {
+      modalTitle.textContent = title;
+      modalDesc.textContent = desc || '';
+      modalBody.innerHTML = bodyHTML || '';
+      modal.style.display = 'flex';
+      modal.setAttribute('aria-hidden', 'false');
+    }
+    function closeModal() {
+      modal.style.display = 'none';
+      modal.setAttribute('aria-hidden', 'true');
+    }
+    modalCancel.addEventListener('click', closeModal);
+    modalAction.addEventListener('click', () => {
+      closeModal();
+      alert('데모 동작입니다. 실제 서비스는 백엔드 연동이 필요합니다.');
+    });
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') closeModal();
+    });
+
+    // --- 커뮤니티 / 게시판 ---
+    document.getElementById('openCommunity').addEventListener('click', () => {
+      openModal('게시판으로 이동', '다른 사용자들의 토론과 자료를 확인하고 작성할 수 있습니다.', `
+        <div style="display:flex;gap:10px;flex-direction:column">
+          <div class="post"><div class="title">[토론] 교육개혁의 방향</div><div class="meta">작성자: 시험 · 2026-06-07</div></div>
+          <div style="margin-top:10px"><button class="small-btn" onclick="alert('게시판 전체보기')">전체 게시판 보기</button></div>
+        </div>
+      `);
+    });
+
+    document.getElementById('openNewPost').addEventListener('click', () => {
+      openModal('새 글 작성', '본문을 입력하고 제출하면 샘플 게시물이 추가됩니다.', `
+        <div style="display:flex;flex-direction:column;gap:12px">
+          <input id="postTitle" placeholder="제목 입력" style="padding:12px;border-radius:12px;border:1px solid var(--card-border);background:#f8fafc"/>
+          <textarea id="postBody" placeholder="내용 입력 (데모)" style="padding:12px;border-radius:12px;border:1px solid var(--card-border);min-height:120px;background:#f8fafc"></textarea>
+          <div style="display:flex;gap:10px;justify-content:flex-end">
+            <button class="small-btn" onclick="submitDemoPost()">게시하기</button>
+          </div>
+        </div>
+      `);
+      modalAction.style.display = 'none';
+    });
+
+    function submitDemoPost() {
+      const title = document.getElementById('postTitle').value.trim() || '제목 없음';
+      const body = document.getElementById('postBody').value.trim() || '';
+      const postsArea = document.getElementById('postsArea');
+      const el = document.createElement('div');
+      el.className = 'post';
+      el.innerHTML = `<div class="title">${title}</div><div class="meta">작성자: 나 · 지금</div><div style="margin-top:10px;color:var(--muted);font-size:14px;line-height:1.6">${body}</div>`;
+      postsArea.insertBefore(el, postsArea.firstChild);
+      closeModal();
+      modalAction.style.display = '';
+    }
+
+    modal.addEventListener('click', (e) => {
+      if (e.target === modal) closeModal();
+    });
+
+    // --- 배너 버튼 이벤트 ---
+    document.getElementById('demoBannerBtn').addEventListener('click', () => {
+      openModal('데모 안내', 'KR Policy의 주요 기능(검색, 최신 동향, 커뮤니티)을 인터랙티브하게 체험할 수 있습니다.');
+    });
+    document.getElementById('signupBannerBtn').addEventListener('click', () => {
+      openModal('회원가입', '이메일로 간단히 가입하여 맞춤 알림을 받아보세요.', `
+        <div style="display:flex;flex-direction:column;gap:12px">
+          <input placeholder="이메일" style="padding:12px;border-radius:12px;border:1px solid var(--card-border);background:#f8fafc"/>
+          <input placeholder="비밀번호" type="password" style="padding:12px;border-radius:12px;border:1px solid var(--card-border);background:#f8fafc"/>
+        </div>
+      `);
+    });
+    document.getElementById('startBannerBtn').addEventListener('click', () => {
+      openModal('무료 시작', '지금 바로 무료 계정으로 핵심 기능을 이용해보세요.');
+    });
+
+    document.getElementById('openSubscribe').addEventListener('click', () => {
+      openModal('구독하기', 'Plus/Pro 요금제로 맞춤 알림, 데이터 내보내기 등 프리미엄 기능을 제공합니다.', `
+        <div style="display:flex;gap:10px">
+          <button class="small-btn" onclick="alert('Plus 구독')">Plus — 4,900원</button>
+          <button class="small-btn" onclick="alert('Pro 구독')">Pro — 19,000원</button>
+        </div>
+      `);
+    });
+
+    document.getElementById('openTrendsModal').addEventListener('click', () => {
+      openModal('전체 최신 동향', '최근 이슈와 의안 상태 변동을 시간순으로 확인합니다.', '<div style="max-height:300px;overflow:auto;padding-right:10px">' +
+        generateTrends().map(d => `<div style="padding:12px 0;border-bottom:1px solid rgba(0,0,0,0.05)"><strong style="color:var(--blue-text)">${d.title}</strong><div style="color:var(--muted);font-size:13px;margin-top:6px">${d.time}</div></div>`).join('') +
+        '</div>');
+    });
+
+    document.getElementById('openCommunityFull').addEventListener('click', () => {
+      openModal('게시판 전체', '활성화된 게시글을 시간순으로 확인하고 참여할 수 있습니다.');
+    });
+
+    document.getElementById('subscribeBtn').addEventListener('click', () => {
+      openModal('요금제 안내', 'Free / Plus / Pro 플랜 중 귀하에게 맞는 최적의 선택을 하세요.', `
+        <div style="display:flex;flex-direction:column;gap:10px">
+          <div style="padding:12px;border-radius:12px;border:1px solid var(--card-border);background:#f8fafc"><strong style="color:var(--blue-text)">Free</strong> — 기본 검색 및 동향 파악</div>
+          <div style="padding:12px;border-radius:12px;border:1px solid var(--card-border);background:#f8fafc"><strong style="color:var(--blue-text)">Plus — 4,900원</strong> — 맞춤 알림 / CSV 추출</div>
+          <div style="padding:12px;border-radius:12px;border:1px solid var(--card-border);background:#f8fafc"><strong style="color:var(--blue-text)">Pro — 19,000원</strong> — API 연동 / 심화 데이터</div>
+        </div>
+      `);
+    });
+
+    // 기타 기능 버튼들
+    document.getElementById('demoAddAlert').addEventListener('click', () => {
+      alert('알림 설정을 완료했습니다.');
+    });
+    document.getElementById('demoExport').addEventListener('click', () => {
+      alert('데이터를 CSV 형식으로 내보냅니다.');
+    });
+  
+    // --- 노란봉투법 정책 궤도형 타자 체험 ---
+    const typingSentences = [
+      '노란봉투법은 노동조합의 쟁의행위로 발생한 손해배상 청구를 제한하는 법안이다.',
+      '하청 노동자의 교섭권을 넓히는 내용도 주요하게 담고 있다.',
+      '노동자의 권리와 기업의 책임 범위를 함께 생각해볼 수 있다.'
+    ];
+    let typingRoundIndex = 0, typingStartedAt = null, typingTotalChars = 0, typingTotalSeconds = 0;
+    const typingAnswers = [];
+    const typingTargetEl = document.getElementById('typingTarget');
+    const typingInput = document.getElementById('typingInput');
+    const typingRound = document.getElementById('typingRound');
+    const typingTimer = document.getElementById('typingTimer');
+    const typingResult = document.getElementById('typingResult');
+    const orbitDots = [...document.querySelectorAll('.typing-orbit-dot')];
+    function escapeTypingHtml(value) { return value.replace(/[&<>"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch])); }
+    function renderTarget(sentence) {
+      typingTargetEl.innerHTML = [...sentence].map((ch, i) => `<span class="char" data-idx="${i}">${escapeTypingHtml(ch)}</span>`).join('');
+    }
+    function paintChars() {
+      const target = typingSentences[typingRoundIndex];
+      const value = typingInput.value;
+      const spans = typingTargetEl.querySelectorAll('.char');
+      spans.forEach((span, i) => {
+        span.classList.remove('correct', 'wrong', 'current');
+        if (i < value.length) span.classList.add(value[i] === target[i] ? 'correct' : 'wrong');
+        else if (i === value.length) span.classList.add('current');
+      });
+    }
+    function updateTypingFast() {
+      if (!typingStartedAt && typingInput.value) typingStartedAt = performance.now();
+      const elapsed = typingStartedAt ? (performance.now() - typingStartedAt) / 1000 : 0;
+      typingTimer.textContent = `시간 ${elapsed.toFixed(1)}초`;
+      paintChars();
+    }
+    function refreshOrbit() {
+      orbitDots.forEach((dot, i) => { dot.classList.toggle('active', i === typingRoundIndex); dot.classList.toggle('done', i < typingRoundIndex); });
+    }
+    function finishTyping() {
+      const target = typingSentences[typingRoundIndex], value = typingInput.value;
+      const elapsed = typingStartedAt ? (performance.now() - typingStartedAt) / 1000 : 0;
+      typingAnswers.push({ target, value, elapsed });
+      typingTotalChars += value.length; typingTotalSeconds += elapsed; typingRoundIndex++;
+      if (typingRoundIndex < typingSentences.length) {
+        typingInput.value = ''; typingStartedAt = null;
+        typingRound.textContent = `${typingRoundIndex + 1} / ${typingSentences.length}`;
+        renderTarget(typingSentences[typingRoundIndex]);
+        typingResult.classList.remove('show'); refreshOrbit(); updateTypingFast(); typingInput.focus();
+      } else {
+        const average = typingTotalSeconds ? Math.round(typingTotalChars / typingTotalSeconds * 60) : 0;
+        const wrongChars = typingAnswers.reduce((sum, item) => {
+          let wrong = Math.abs(item.value.length - item.target.length);
+          for (let j = 0; j < Math.min(item.value.length, item.target.length); j++) if (item.value[j] !== item.target[j]) wrong++;
+          return sum + wrong;
+        }, 0);
+        const grade = wrongChars <= 3 && average >= 250 ? 'A' : (wrongChars <= 7 && average >= 150 ? 'B' : 'C');
+        const gradeMessage = grade === 'A' ? '정확하고 빠른 정책 입력' : (grade === 'B' ? '안정적인 정책 입력' : '조금 더 연습해보세요');
+        const review = typingAnswers.map((item, i) => {
+          const exact = item.value === item.target, empty = !item.value.trim();
+          const label = exact ? '정확히 입력됨' : (empty ? '입력하지 않음' : '문장과 다르게 입력됨');
+          const cls = exact ? '' : (empty ? 'incomplete' : 'wrong');
+          let mismatch = 0, firstError = -1;
+          const max = Math.max(item.value.length, item.target.length);
+          for (let j = 0; j < max; j++) { if ((item.value[j] || '') !== (item.target[j] || '')) { mismatch++; if (firstError < 0) firstError = j; } }
+          const analysis = exact ? '모든 글자를 정확하게 입력했습니다.' : (empty ? `이 문장은 입력하지 않았습니다. 정답 길이는 ${item.target.length}자입니다.` : `총 ${mismatch}자 불일치 · ${firstError + 1}번째 글자부터 다시 확인해보세요.`);
+          return `<div class="typing-review-row ${cls}"><strong>문장 ${i + 1} · ${label}</strong><span>입력: ${escapeTypingHtml(item.value || '(없음)')}</span><div class="typing-analysis"><em>정답:</em> ${escapeTypingHtml(item.target)}<br><em>분석:</em> ${analysis}</div></div>`;
+        }).join('');
+        typingInput.disabled = true; typingRound.textContent = '완료'; refreshOrbit();
+        typingResult.classList.add('show');
+        typingResult.innerHTML = `<strong>정책 타자 체험 완료!</strong><div class="typing-score"><strong>${grade}</strong><span>${gradeMessage}</span></div>총 입력 글자 수 ${typingTotalChars}자 · 틀린 타자 수 <strong>${wrongChars}자</strong><br>총 소요 시간 <strong>${typingTotalSeconds.toFixed(1)}초</strong> · 평균 타자 <strong>${average}자/분</strong><div class="typing-review"><strong>입력 기록 확인</strong>${review}</div>`;
+      }
+    }
+    renderTarget(typingSentences[typingRoundIndex]);
+    typingInput.addEventListener('input', updateTypingFast);
+    typingInput.addEventListener('keydown', (event) => { if (event.key === 'Enter') { event.preventDefault(); finishTyping(); } });
+    document.getElementById('typingReset').addEventListener('click', () => { location.reload(); });
+
+  </script>
+</body>
+
+</html>

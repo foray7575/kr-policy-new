@@ -40,7 +40,7 @@
 
     .wrap {
       width: 100%;
-      max-width: var(--maxw);
+      man-width: var(--maxw);
       margin: 0 auto;
     }
 
@@ -405,6 +405,77 @@
     .bill-trend-bar-col.active .bill-trend-bar-label {
       color: var(--blue-text);
       font-weight: 700;
+    }
+
+    /* Large variant for hero lede area */
+    .bill-trend-block--large {
+      margin-top: 26px;
+      padding: 20px 22px;
+      border-radius: 16px;
+      background: #f8fafc;
+      border: 1px solid var(--card-border);
+      border-top: 1px solid var(--card-border);
+    }
+
+    .bill-trend-block--large .bill-trend-head h4 {
+      font-size: 15px;
+    }
+
+    .bill-trend-block--large .bill-trend-select {
+      padding: 8px 14px;
+      font-size: 13px;
+    }
+
+    .bill-trend-block--large .bill-trend-chart {
+      height: 220px;
+      gap: 10px;
+      padding: 8px 4px 0;
+    }
+
+    .bill-trend-block--large .bill-trend-bar {
+      max-width: 40px;
+      border-radius: 8px 8px 0 0;
+    }
+
+    .bill-trend-block--large .bill-trend-bar-value {
+      font-size: 13px;
+    }
+
+    .bill-trend-block--large .bill-trend-bar-label {
+      font-size: 12px;
+    }
+
+    /* Single month filter view */
+    .bill-trend-chart.single-mode {
+      align-items: center;
+      justify-content: center;
+    }
+
+    .bill-trend-single {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .bill-trend-single-value {
+      font-size: 56px;
+      font-weight: 900;
+      color: var(--blue-primary);
+      line-height: 1;
+    }
+
+    .bill-trend-single-unit {
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--muted);
+      margin-left: 4px;
+    }
+
+    .bill-trend-single-label {
+      font-size: 15px;
+      font-weight: 800;
+      color: var(--blue-text);
     }
 
     .pill {

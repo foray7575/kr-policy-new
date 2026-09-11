@@ -21,9 +21,6 @@
     <section class="banner title-orbit-preview" aria-label="KR Policy 원형 타이틀 미리보기">
       <div class="banner-content">
         <div class="banner-text">
-          <span class="orbit-ring orbit-ring-cyan" aria-hidden="true"></span>
-          <span class="orbit-ring orbit-ring-violet" aria-hidden="true"></span>
-          <span class="orbit-ring orbit-ring-pink" aria-hidden="true"></span>
           <h1>KR Policy</h1>
           <p>정책을 쉽고 투명하게, 정치의 문턱을 낮추는 시작점</p>
         </div>
@@ -66,120 +63,23 @@
           <!-- 동적으로 채워짐 -->
         </div>
 
-        <div style="margin-top:16px;display:flex;gap:10px;align-items:center">
+        <div style="margin-top:16px;display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+          <button class="small-btn" id="openTrendsModal">전체 보기</button>
           <button class="small-btn" id="openSubscribe">구독하기</button>
           <button class="small-btn" id="openCommunity">게시판 보기</button>
         </div>
       </aside>
     </section>
 
-    <!-- 핵심 기능 (인터랙티브) -->
-    <section aria-labelledby="features-title">
-      <h2 id="features-title" style="font-size:22px;margin:0 0 16px 0;font-weight:800;color:var(--blue-text)">핵심 기능</h2>
-
-      <div class="features" role="list">
-        <!-- 검색 필터 -->
-        <div class="feature" id="feat-search" role="button" tabindex="0" aria-expanded="false"
-          aria-controls="search-extra">
-          <div class="head">
-            <div class="feature-icon">
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
-                stroke-linecap="round" stroke-linejoin="round">
-                <circle cx="11" cy="11" r="8"></circle>
-                <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
-              </svg>
-            </div>
-            <div>
-              <h3>검색 필터 · 알림</h3>
-              <p>키워드, 발의자, 위원회 등으로 정교하게 필터링</p>
-            </div>
-          </div>
-
-          <div class="extra" id="search-extra">
-            <div class="chips" aria-hidden="false">
-              <div class="chip">발의자: 홍길동</div>
-              <div class="chip">위원회: 환경소위원회</div>
-              <div class="chip">상태: 심사중</div>
-              <div class="chip">기간: 2025-01 ~ 2026-06</div>
-            </div>
-
-            <p style="margin-top:12px;color:var(--blue-text);font-weight:600">예시: 관심 키워드를 추가하면 해당 키워드의 의안이 등록되거나 상태가 변경될
-              때 알림을 받을 수 있습니다.</p>
-
-            <div style="margin-top:14px;display:flex;gap:10px">
-              <button class="small-btn" id="demoAddAlert">알림 추가</button>
-              <button class="small-btn" id="demoExport">CSV 다운로드</button>
-            </div>
-          </div>
-        </div>
-
-        <!-- 최신 동향 -->
-        <div class="feature" id="feat-trends" role="button" tabindex="0" aria-expanded="false"
-          aria-controls="trends-extra">
-          <div class="head">
-            <div class="feature-icon">
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
-                stroke-linecap="round" stroke-linejoin="round">
-                <polyline points="23 6 13.5 15.5 8.5 10.5 1 18"></polyline>
-                <polyline points="17 6 23 6 23 12"></polyline>
-              </svg>
-            </div>
-            <div>
-              <h3>최신 동향 · 트렌드</h3>
-              <p>따끈따끈한 의안·언론 헤드라인을 우선 제공</p>
-            </div>
-          </div>
-
-          <div class="extra" id="trends-extra">
-            <div id="trendsContent">
-              <!-- 동적 트렌드 리스트 -->
-            </div>
-            <div style="margin-top:14px;display:flex;gap:10px">
-              <button class="small-btn" id="refreshInline">새로고침</button>
-              <button class="small-btn" id="openTrendsModal">전체 보기</button>
-            </div>
-          </div>
-        </div>
-
-        <!-- 커뮤니티 -->
-        <div class="feature" id="feat-community" role="button" tabindex="0" aria-expanded="false"
-          aria-controls="comm-extra">
-          <div class="head">
-            <div class="feature-icon">
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
-                stroke-linecap="round" stroke-linejoin="round">
-                <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
-              </svg>
-            </div>
-            <div>
-              <h3>커뮤니티 · 게시판</h3>
-              <p>사용자 의견, 분석 토론, 자료 공유</p>
-            </div>
-          </div>
-
-          <div class="extra" id="comm-extra">
-            <div id="postsArea">
-              <!-- 예시 게시물 -->
-              <div class="post">
-                <div class="title">[분석] 최근 탄소중립 법안의 쟁점</div>
-                <div class="meta">작성자: 단추 · 2026-06-05 · 댓글 4</div>
-              </div>
-              <div class="post">
-                <div class="title">교육개혁 관련 발의자 비교 자료</div>
-                <div class="meta">작성자: 연구생 · 2026-06-02 · 댓글 2</div>
-              </div>
-            </div>
-
-            <div style="margin-top:14px;display:flex;gap:10px">
-              <button class="small-btn" id="openNewPost">새 글 작성</button>
-              <button class="small-btn" id="openCommunityFull">전체 게시판</button>
-            </div>
-          </div>
-        </div>
+    <section class="side-card glossary-section" aria-label="정책 용어사전">
+      <h3>📖 정책 용어사전</h3>
+      <p style="margin:0 0 16px;color:var(--muted);font-size:14px">정치·정책 용어를 쉽고 빠르게 이해해보세요.</p>
+      <div style="display:flex;gap:8px;align-items:center;margin-bottom:4px">
+        <input id="glossarySearch" type="search" placeholder="용어 검색 (예: 지역화폐, 재정자립도, 협동조합)" style="flex:1;padding:12px 16px;border-radius:12px;border:1px solid var(--card-border);background:#f8fafc;font-size:14px;box-sizing:border-box" />
+        <button id="glossaryShowAllBtn" class="small-btn" style="white-space:nowrap;padding:12px 16px">전체 보기</button>
       </div>
-
+      <div id="glossaryList"></div>
     </section>
-
 
     <section class="typing-slide" aria-labelledby="typing-title">
       <div class="typing-kicker">POLICY TYPING EXPERIENCE</div>

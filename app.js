@@ -574,16 +574,16 @@ const features = Array.from(document.querySelectorAll('.feature'));
     function openSignupModal() {
       openModal('회원가입', '이메일로 간단히 가입하여 맞춤 알림을 받아보세요.', `
         <div style="display:flex;flex-direction:column;gap:12px">
-          <input placeholder="이메일" style="padding:12px;border-radius:12px;border:1px solid var(--card-border);background:#f8fafc"/>
-          <input placeholder="비밀번호" type="password" style="padding:12px;border-radius:12px;border:1px solid var(--card-border);background:#f8fafc"/>
+          <input placeholder="이메일" style="width:100%;box-sizing:border-box;padding:12px;border-radius:12px;border:1px solid var(--card-border);background:#f8fafc;font-size:16px"/>
+          <input placeholder="비밀번호" type="password" style="width:100%;box-sizing:border-box;padding:12px;border-radius:12px;border:1px solid var(--card-border);background:#f8fafc;font-size:16px"/>
         </div>
       `);
     }
     function openLoginModal() {
       openModal('로그인', '이메일과 비밀번호를 입력해 로그인하세요.', `
         <div style="display:flex;flex-direction:column;gap:12px">
-          <input placeholder="이메일" style="padding:12px;border-radius:12px;border:1px solid var(--card-border);background:#f8fafc"/>
-          <input placeholder="비밀번호" type="password" style="padding:12px;border-radius:12px;border:1px solid var(--card-border);background:#f8fafc"/>
+          <input placeholder="이메일" style="width:100%;box-sizing:border-box;padding:12px;border-radius:12px;border:1px solid var(--card-border);background:#f8fafc;font-size:16px"/>
+          <input placeholder="비밀번호" type="password" style="width:100%;box-sizing:border-box;padding:12px;border-radius:12px;border:1px solid var(--card-border);background:#f8fafc;font-size:16px"/>
           <div style="text-align:left;margin-top:4px;font-size:13px;color:var(--muted)">
             계정이 없다면 새로 만드세요! <a href="#" id="gotoSignupLink" style="color:var(--blue-primary);font-weight:700">회원가입</a>
           </div>

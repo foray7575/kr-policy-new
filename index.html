@@ -21,6 +21,9 @@
     <section class="banner title-orbit-preview" aria-label="KR Policy 원형 타이틀 미리보기">
       <div class="banner-content">
         <div class="banner-text">
+          <span class="orbit-ring orbit-ring-cyan" aria-hidden="true"></span>
+          <span class="orbit-ring orbit-ring-violet" aria-hidden="true"></span>
+          <span class="orbit-ring orbit-ring-pink" aria-hidden="true"></span>
           <h1>KR Policy</h1>
           <p>정책을 쉽고 투명하게, 정치의 문턱을 낮추는 시작점</p>
         </div>
@@ -32,13 +35,7 @@
               <circle cx="11" cy="11" r="6" stroke="#1e3a8a" stroke-width="2" stroke-linecap="round"
                 stroke-linejoin="round" />
             </svg>
-            <input id="searchInput" type="search" placeholder="정책·법안 · 정치인 · 키워드 입력(예: 탄소중립)" aria-label="검색어 입력" />
-            <select id="searchScope" aria-label="검색 범위"
-              style="border:none;outline:none;background:transparent;color:var(--muted);font-weight:600">
-              <option value="policy">정책·법안</option>
-              <option value="politician">정치인</option>
-              <option value="updates">최신 동향</option>
-            </select>
+            <input id="searchInput" type="search" placeholder="정책·법안 키워드를 입력하세요 (예: 탄소중립, 노란봉투법, 청년)" aria-label="검색어 입력" />
           </div>
           <button class="search-button" id="searchBtn">검색</button>
         </div>
@@ -191,15 +188,17 @@
         <button type="button" class="typing-topic-btn" id="topicYellowEnvelope" data-topic="yellowEnvelope" aria-pressed="false">노란봉투법</button>
         <button type="button" class="typing-topic-btn" id="topicSupplementaryInvestigation" data-topic="supplementaryInvestigation" aria-pressed="false">보완수사권</button>
       </div>
-      <div class="typing-orbit" aria-label="문장 진행 상태"><span class="typing-orbit-dot"></span><span class="typing-orbit-dot"></span><span class="typing-orbit-dot"></span></div>
-      <div class="typing-status"><span class="typing-stat" id="typingRound">대기 중</span><span class="typing-stat" id="typingTimer">시간 0.0초</span></div>
-      <div class="typing-policy" id="typingTarget" aria-live="off" style="color:var(--muted);text-align:center;font-family:inherit;font-weight:600">위의 정책 버튼(노란봉투법 / 보완수사권)을 선택하면 타자 게임이 시작됩니다.</div>
-      <div class="typing-input-wrap">
-        <input class="typing-input" id="typingInput" type="text" autocomplete="off" placeholder="먼저 학습할 정책을 위에서 선택해주세요." aria-label="정책 본문 입력" disabled>
-        <span class="typing-enter-badge" id="typingEnterBadge" aria-hidden="true">Enter ↵</span>
+      <div class="typing-play-area" id="typingPlayArea">
+        <div class="typing-orbit" aria-label="문장 진행 상태"><span class="typing-orbit-dot"></span><span class="typing-orbit-dot"></span><span class="typing-orbit-dot"></span></div>
+        <div class="typing-status"><span class="typing-stat" id="typingRound">대기 중</span><span class="typing-stat" id="typingTimer">시간 0.0초</span></div>
+        <div class="typing-policy" id="typingTarget" aria-live="off"></div>
+        <div class="typing-input-wrap">
+          <input class="typing-input" id="typingInput" type="text" autocomplete="off" placeholder="정책 문장을 입력하고 Enter를 누르세요." aria-label="정책 본문 입력">
+          <span class="typing-enter-badge" id="typingEnterBadge" aria-hidden="true">Enter ↵</span>
+        </div>
+        <div class="typing-actions"><button class="small-btn" id="typingReset" style="display:none;padding:10px 24px;font-size:14px">다시 시작</button></div>
+        <div class="typing-result" id="typingResult" role="status"></div>
       </div>
-      <div class="typing-actions"><button class="small-btn" id="typingReset" style="display:none;padding:10px 24px;font-size:14px">다시 시작</button></div>
-      <div class="typing-result" id="typingResult" role="status"></div>
     </section>
 
     <section class="bottom-section" aria-label="문의 및 안내">

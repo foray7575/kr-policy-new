@@ -12,8 +12,9 @@ const BILL_ENDPOINT = 'https://open.assembly.go.kr/portal/openapi/nzmimeepazxkub
 const CURRENT_AGE = '22';
 
 module.exports = async function handler(req, res) {
+  const isLatest = req.query && (req.query.latest === '1' || req.query.latest === 'true');
   const query = (req.query && req.query.q ? String(req.query.q) : '').trim();
-  if (!query) {
+  if (!isLatest && !query) {
     res.status(400).json({ error: '검색어(q)가 필요합니다.' });
     return;
   }
@@ -24,14 +25,18 @@ module.exports = async function handler(req, res) {
     return;
   }
 
-  const params = new URLSearchParams({
+  const pSize = (req.query && req.query.pSize ? String(req.query.pSize) : '10');
+
+  const baseParams = {
     KEY: apiKey,
     Type: 'json',
     pIndex: '1',
-    pSize: '10',
+    pSize,
     AGE: CURRENT_AGE,
-    BILL_NAME: query,
-  });
+  };
+  // 최신순 모드(latest=1)에서는 BILL_NAME 필터 없이 최근 발의된 법률안을 그대로 가져옵니다.
+  if (!isLatest) baseParams.BILL_NAME = query;
+  const params = new URLSearchParams(baseParams);
 
   try {
     const upstream = await fetch(`${BILL_ENDPOINT}?${params.toString()}`);

@@ -749,10 +749,9 @@
       background-clip: text;
       color: transparent;
       text-shadow: 0 0 38px rgba(85, 230, 255, .25);
-      cursor: pointer;
     }
 
-    /* --- 서로 다른 색깔의 큰 타원 3개가 회전하는 오빗 링 --- */
+    /* --- 서로 다른 색깔의 큰 타원 3개 (정적 장식) --- */
     .title-orbit-preview .orbit-ring {
       position: absolute;
       left: 50%;
@@ -784,36 +783,6 @@
       height: 285%;
       border: 1.5px solid rgba(255, 98, 192, .4);
       transform: translate(-50%, -50%) rotate(72deg);
-    }
-
-    .title-orbit-preview.orbit-spin-active .orbit-ring-cyan {
-      animation: orbitSpinCyan 4.6s linear infinite;
-      filter: brightness(1.55) drop-shadow(0 0 12px rgba(85, 230, 255, .5));
-    }
-
-    .title-orbit-preview.orbit-spin-active .orbit-ring-violet {
-      animation: orbitSpinViolet 3.4s linear infinite reverse;
-      filter: brightness(1.55) drop-shadow(0 0 12px rgba(140, 123, 255, .55));
-    }
-
-    .title-orbit-preview.orbit-spin-active .orbit-ring-pink {
-      animation: orbitSpinPink 5.6s linear infinite;
-      filter: brightness(1.55) drop-shadow(0 0 12px rgba(255, 98, 192, .5));
-    }
-
-    @keyframes orbitSpinCyan {
-      from { transform: translate(-50%, -50%) rotate(-24deg); }
-      to { transform: translate(-50%, -50%) rotate(336deg); }
-    }
-
-    @keyframes orbitSpinViolet {
-      from { transform: translate(-50%, -50%) rotate(42deg); }
-      to { transform: translate(-50%, -50%) rotate(402deg); }
-    }
-
-    @keyframes orbitSpinPink {
-      from { transform: translate(-50%, -50%) rotate(72deg); }
-      to { transform: translate(-50%, -50%) rotate(432deg); }
     }
 
     .title-orbit-preview .banner-text p { color: rgba(180, 215, 245, .82); letter-spacing: .16em; text-transform: uppercase; }

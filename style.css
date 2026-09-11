@@ -209,6 +209,35 @@
       width: 100%;
     }
 
+    .search-autocomplete {
+      display: none;
+      position: absolute;
+      top: 100%;
+      left: 0;
+      right: 0;
+      margin-top: 8px;
+      background: #fff;
+      border-radius: 14px;
+      box-shadow: 0 14px 34px rgba(15, 23, 42, 0.18);
+      overflow: hidden;
+      z-index: 30;
+      text-align: left;
+    }
+    .search-autocomplete-item {
+      padding: 11px 18px;
+      font-size: 14px;
+      color: var(--news-accent);
+      cursor: pointer;
+    }
+    .search-autocomplete-item:hover {
+      background: #eef2ff;
+    }
+    .search-autocomplete-item .ac-tag {
+      margin-left: 8px;
+      font-size: 11px;
+      color: var(--muted);
+    }
+
 
     .banner-promo {
       margin-top: 22px;

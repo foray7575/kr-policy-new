@@ -1051,6 +1051,9 @@
     @keyframes typingPlayAreaIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
     .typing-topic-btn { padding:8px 16px; border-radius:999px; border:2px solid #cfe0ff; background:#f3f7ff; color:#1c2c52; font-weight:700; cursor:pointer; font-size:13px; }
     .typing-topic-btn.active { background:#1c6ce8; border-color:#1c6ce8; color:#fff; box-shadow:0 4px 12px rgba(28,108,232,.3); }
+    .typing-topic-btn.achieved-a { background:#fbbf24; border-color:#f59e0b; color:#78350f; box-shadow:0 4px 12px rgba(245,158,11,.35); }
+    .typing-topic-btn.achieved-a::after { content: ' \2605 A'; font-weight:900; }
+    .typing-topic-btn.achieved-a.active { background:#f59e0b; border-color:#d97706; color:#fff; }
     .typing-slide .typing-kicker:before { content: '● '; color: #ff8a00; }
     .typing-slide h2 { margin: 8px 0 8px; color: #0f2a63; font-size: 25px; font-weight: 900; }
     .typing-slide .typing-lede { margin: 0 0 18px; color: #55648a; line-height: 1.65; }
@@ -1143,6 +1146,8 @@
     .typing-result.show { display: block; }
 
     .typing-score { margin:16px auto 18px; padding:18px 26px; max-width:300px; text-align:center; border-radius:18px; background: linear-gradient(135deg,#eaf2ff,#ffffff); border:2px solid #1c6ce8; box-shadow: 0 10px 24px rgba(28,108,232,.18); color:#0f2a63; }
+    .typing-score.fail { background: linear-gradient(135deg,#fef2f2,#ffffff); border-color:#ef4444; color:#7f1d1d; }
+    .typing-score.fail strong { color:#ef4444; }
     .typing-score strong { display:block; font-size:44px; line-height:1; color:#1c6ce8; }
     .typing-score span { display:block; margin-top:8px; font-weight:800; }
 

@@ -342,12 +342,19 @@ const features = Array.from(document.querySelectorAll('.feature'));
         </div>`;
     }
 
+    function updateGlossaryToggleLabel() {
+      if (glossaryShowAllBtn) {
+        glossaryShowAllBtn.textContent = glossaryExpanded ? '접기' : '전체 보기';
+      }
+    }
+
     function renderGlossaryCompact() {
       glossaryExpanded = false;
       const featured = glossaryFeaturedTerms
         .map(name => glossaryTerms.find(g => g.term === name))
         .filter(Boolean);
       glossaryListEl.innerHTML = featured.map(g => glossaryRow(g, { expanded: false })).join('');
+      updateGlossaryToggleLabel();
     }
 
     function renderGlossaryFull(filterText) {
@@ -358,9 +365,10 @@ const features = Array.from(document.querySelectorAll('.feature'));
         : glossaryTerms;
       if (filtered.length === 0) {
         glossaryListEl.innerHTML = '<div style="color:var(--muted);font-size:13px;padding:10px 0">일치하는 용어가 없습니다.</div>';
-        return;
+      } else {
+        glossaryListEl.innerHTML = filtered.map(g => glossaryRow(g, { expanded: true })).join('');
       }
-      glossaryListEl.innerHTML = filtered.map(g => glossaryRow(g, { expanded: true })).join('');
+      updateGlossaryToggleLabel();
     }
 
     if (glossaryListEl) {
@@ -374,7 +382,11 @@ const features = Array.from(document.querySelectorAll('.feature'));
       }
       if (glossaryShowAllBtn) {
         glossaryShowAllBtn.addEventListener('click', () => {
-          renderGlossaryFull(glossarySearchEl ? glossarySearchEl.value : '');
+          if (glossaryExpanded) {
+            renderGlossaryCompact();
+          } else {
+            renderGlossaryFull(glossarySearchEl ? glossarySearchEl.value : '');
+          }
         });
       }
     }
@@ -447,6 +459,7 @@ const features = Array.from(document.querySelectorAll('.feature'));
     let typingSentences = [];
     let typingRoundIndex = 0, typingStartedAt = null, typingTotalChars = 0, typingTotalSeconds = 0;
     const typingAnswers = [];
+    const typingAchievedA = {};
     const typingTargetEl = document.getElementById('typingTarget');
     const typingInput = document.getElementById('typingInput');
     const typingRound = document.getElementById('typingRound');
@@ -506,12 +519,24 @@ const features = Array.from(document.querySelectorAll('.feature'));
           for (let j = 0; j < Math.min(item.value.length, item.target.length); j++) if (item.value[j] !== item.target[j]) wrong++;
           return sum + wrong;
         }, 0);
-        const grade = wrongChars <= 3 && average >= 250 ? 'A' : (wrongChars <= 7 && average >= 150 ? 'B' : 'C');
-        const gradeMessage = grade === 'A' ? '정확하고 빠른 정책 입력' : (grade === 'B' ? '안정적인 정책 입력' : '조금 더 연습해보세요');
+        const isFail = average < 50;
+        const grade = isFail ? null : (wrongChars <= 3 && average >= 200 ? 'A' : (wrongChars <= 7 && average >= 150 ? 'B' : 'C'));
+        const gradeMessage = isFail
+          ? '타자 속도가 너무 느려요. 다시 도전해보세요!'
+          : (grade === 'A' ? '정확하고 빠른 정책 입력' : (grade === 'B' ? '안정적인 정책 입력' : '조금 더 연습해보세요'));
         typingInput.disabled = true; typingRound.textContent = '완료'; refreshOrbit();
         typingResult.classList.add('show');
-        typingResult.innerHTML = `<strong>정책 타자 체험 완료!</strong><div class="typing-score"><strong>${grade}</strong><span>${gradeMessage}</span></div><div style="font-size:14px;line-height:1.7;color:var(--blue-text);margin-top:8px">총 입력 글자 수 <strong>${typingTotalChars}자</strong> · 틀린 타자 수 <strong>${wrongChars}자</strong><br>총 소요 시간 <strong>${typingTotalSeconds.toFixed(1)}초</strong> · 평균 타자 <strong>${average}자/분</strong></div>`;
+        typingResult.classList.toggle('fail', isFail);
+        const scoreHtml = isFail
+          ? `<div class="typing-score fail"><strong>실패</strong><span>${gradeMessage}</span></div>`
+          : `<div class="typing-score"><strong>${grade}</strong><span>${gradeMessage}</span></div>`;
+        typingResult.innerHTML = `<strong>정책 타자 체험 완료!</strong>${scoreHtml}<div style="font-size:14px;line-height:1.7;color:var(--blue-text);margin-top:8px">총 입력 글자 수 <strong>${typingTotalChars}자</strong> · 틀린 타자 수 <strong>${wrongChars}자</strong><br>총 소요 시간 <strong>${typingTotalSeconds.toFixed(1)}초</strong> · 평균 타자 <strong>${average}자/분</strong></div>`;
         document.getElementById('typingReset').style.display = 'inline-block';
+        if (grade === 'A' && currentTopicKey) {
+          typingAchievedA[currentTopicKey] = true;
+          const achievedBtn = document.querySelector(`.typing-topic-btn[data-topic="${currentTopicKey}"]`);
+          if (achievedBtn) achievedBtn.classList.add('achieved-a');
+        }
       }
     }
     function selectTopic(topicKey) {

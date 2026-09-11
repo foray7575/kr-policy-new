@@ -177,7 +177,7 @@
       gap: 12px;
       margin-top: 22px;
       width: 100%;
-      max-width: 1640px;
+      max-width: none;
       position: relative;
       z-index: 4;
     }
@@ -207,6 +207,30 @@
       color: var(--news-accent);
       background: transparent;
       width: 100%;
+    }
+
+
+    .banner-promo {
+      margin-top: 22px;
+      max-width: 720px;
+      text-align: center;
+    }
+    .banner-promo strong {
+      display: block;
+      font-size: 23px;
+      font-weight: 800;
+      color: #7dd3fc;
+      letter-spacing: -0.5px;
+      line-height: 1.4;
+      text-shadow: 0 2px 14px rgba(85, 230, 255, 0.35);
+    }
+    .banner-promo p {
+      margin: 10px 0 0;
+      font-size: 15px;
+      font-weight: 500;
+      color: #000000;
+      line-height: 1.7;
+      text-shadow: 0 1px 4px rgba(0,0,0,0.35);
     }
 
     .banner-btn {
@@ -241,11 +265,66 @@
 
     /* --- 나머지 레이아웃 --- */
     .hero {
-      display: grid;
-      grid-template-columns: 1fr 360px;
-      gap: 24px;
-      align-items: start;
       margin-bottom: 30px;
+    }
+
+    .hero-card {
+      display: grid;
+      grid-template-columns: 1fr 480px;
+      background: var(--paper);
+      border-radius: 16px;
+      box-shadow: 0 10px 40px var(--shadow);
+      border: 1px solid var(--card-border);
+      overflow: hidden;
+    }
+
+    .hero-news {
+      padding: 24px;
+    }
+
+    .hero-graph {
+      padding: 24px;
+      border-left: 1px solid var(--card-border);
+      background: #f8fafc;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .hero-graph-title {
+      margin: 0 0 16px 0;
+      font-size: 15px;
+      color: var(--blue-text);
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .hero-graph .hero-graph-block {
+      margin-top: 0;
+      padding: 0;
+      border: none;
+      background: transparent;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .hero-graph .bill-trend-chart {
+      flex: 1;
+      height: auto;
+      min-height: 360px;
+    }
+
+    .hero-graph .bill-trend-bar {
+      max-width: 54px;
+    }
+
+    .hero-graph .bill-trend-bar-value {
+      font-size: 14px;
+    }
+
+    .hero-graph .bill-trend-bar-label {
+      font-size: 12px;
     }
 
     .main-article {
@@ -797,8 +876,8 @@
     }
 
     @media (max-width:1020px) {
-      .hero {
-        grid-template-columns: 1fr 320px
+      .hero-card {
+        grid-template-columns: 1fr 340px
       }
 
       .features {
@@ -821,8 +900,13 @@
     }
 
     @media (max-width:760px) {
-      .hero {
-        grid-template-columns: 1fr
+      .hero-card {
+        grid-template-columns: 1fr;
+      }
+
+      .hero-graph {
+        border-left: none;
+        border-top: 1px solid var(--card-border);
       }
 
       .features {
@@ -1052,7 +1136,7 @@
     .typing-topic-btn { padding:8px 16px; border-radius:999px; border:2px solid #cfe0ff; background:#f3f7ff; color:#1c2c52; font-weight:700; cursor:pointer; font-size:13px; }
     .typing-topic-btn.active { background:#1c6ce8; border-color:#1c6ce8; color:#fff; box-shadow:0 4px 12px rgba(28,108,232,.3); }
     .typing-topic-btn.achieved-a { background:#fbbf24; border-color:#f59e0b; color:#78350f; box-shadow:0 4px 12px rgba(245,158,11,.35); }
-    .typing-topic-btn.achieved-a::after { content: ' \2605 A'; font-weight:900; }
+    .typing-topic-btn.achieved-a::after { content: ' \2605'; font-weight:900; }
     .typing-topic-btn.achieved-a.active { background:#f59e0b; border-color:#d97706; color:#fff; }
     .typing-slide .typing-kicker:before { content: '● '; color: #ff8a00; }
     .typing-slide h2 { margin: 8px 0 8px; color: #0f2a63; font-size: 25px; font-weight: 900; }

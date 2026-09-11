@@ -1,12 +1,4 @@
 const features = Array.from(document.querySelectorAll('.feature'));
-
-    // --- 타이틀 오빗 디자인 호버 스핀 효과 ---
-    const titleOrbitBanner = document.querySelector('.title-orbit-preview');
-    const titleOrbitH1 = titleOrbitBanner ? titleOrbitBanner.querySelector('.banner-text h1') : null;
-    if (titleOrbitBanner && titleOrbitH1) {
-      titleOrbitH1.addEventListener('mouseenter', () => titleOrbitBanner.classList.add('orbit-spin-active'));
-      titleOrbitH1.addEventListener('mouseleave', () => titleOrbitBanner.classList.remove('orbit-spin-active'));
-    }
     const trendList = document.getElementById('trendList');
     const trendsContent = document.getElementById('trendsContent');
     const modal = document.getElementById('modal');
@@ -42,56 +34,81 @@ const features = Array.from(document.querySelectorAll('.feature'));
       });
     });
 
-    // --- 최신 동향 ---
-    function generateTrends() {
-      const sample = [
-        { title: '탄소중립 법안, 소위원회 통과 추진', time: '방금' },
-        { title: '교육개혁 관련 공청회 예정', time: '12분 전' },
-        { title: '예산 심사 결과 요약: 복지·환경 우선', time: '1시간 전' },
-        { title: '의안 상태 변경: 개인정보 보호 강화안', time: '어제' }
-      ];
-      for (let i = sample.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [sample[i], sample[j]] = [sample[j], sample[i]];
-      }
-      return sample;
+    // --- 최신 동향: 열린국회정보 API 기반 최신순 법률안 ---
+    function formatRelativeDate(dateStr) {
+      if (!dateStr) return '';
+      const then = new Date(`${dateStr}T00:00:00+09:00`);
+      if (isNaN(then.getTime())) return dateStr;
+      const now = new Date();
+      const diffDays = Math.floor((now - then) / (1000 * 60 * 60 * 24));
+      if (diffDays <= 0) return '오늘';
+      if (diffDays === 1) return '어제';
+      return `${diffDays}일 전`;
     }
 
-    function renderTrendsToSide() {
-      const data = generateTrends();
-      trendList.innerHTML = '';
+    async function fetchLatestBills(limit) {
+      try {
+        const res = await fetch(`/api/nanet-search?latest=1&pSize=${limit}`);
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const data = await res.json();
+        const items = Array.isArray(data.items) ? data.items : [];
+        return items.map(item => ({
+          title: item.title || '(제목 없음)',
+          time: formatRelativeDate(item.pubDate),
+          link: item.link || ''
+        }));
+      } catch (err) {
+        return [];
+      }
+    }
+
+    function renderTrendItems(container, data, opts) {
+      const isSide = !!(opts && opts.side);
+      container.innerHTML = '';
+      if (data.length === 0) {
+        container.innerHTML = '<div style="color:var(--muted);font-size:13px;padding:8px 0">최신 법률안을 불러오지 못했습니다.</div>';
+        return;
+      }
       data.forEach(d => {
-        const item = document.createElement('div');
-        item.className = 'top-item';
-        item.innerHTML = `<div style="width:6px;height:40px;border-radius:3px;background:var(--blue-primary);opacity:0.6"></div>
+        const titleHtml = d.link
+          ? `<a href="${d.link}" target="_blank" rel="noopener" style="color:var(--blue-text);font-weight:700;text-decoration:none">${d.title}</a>`
+          : `<div style="font-weight:700;color:var(--blue-text)">${d.title}</div>`;
+        const el = document.createElement('div');
+        if (isSide) {
+          el.className = 'top-item';
+          el.innerHTML = `<div style="width:6px;height:40px;border-radius:3px;background:var(--blue-primary);opacity:0.6"></div>
                           <div style="flex:1">
-                            <div style="font-weight:700;color:var(--blue-text)">${d.title}</div>
+                            ${titleHtml}
                             <div style="color:var(--muted);font-size:13px;margin-top:4px">${d.time}</div>
                           </div>`;
-        trendList.appendChild(item);
+        } else {
+          el.style.padding = '10px 0';
+          el.style.borderBottom = '1px solid rgba(0,0,0,0.05)';
+          el.innerHTML = `${titleHtml}<div style="color:var(--muted);font-size:13px;margin-top:4px">${d.time}</div>`;
+        }
+        container.appendChild(el);
       });
     }
 
-    function renderTrendsInline() {
-      const data = generateTrends().slice(0, 3);
-      trendsContent.innerHTML = '';
-      data.forEach(d => {
-        const el = document.createElement('div');
-        el.style.padding = '10px 0';
-        el.style.borderBottom = '1px solid rgba(0,0,0,0.05)';
-        el.innerHTML = `<div style="font-weight:700;color:var(--blue-text)">${d.title}</div><div style="color:var(--muted);font-size:13px;margin-top:4px">${d.time}</div>`;
-        trendsContent.appendChild(el);
-      });
+    async function renderTrendsToSide() {
+      trendList.innerHTML = '<div style="color:var(--muted);font-size:13px;padding:8px 0">최신 법률안을 불러오는 중...</div>';
+      const data = await fetchLatestBills(4);
+      renderTrendItems(trendList, data, { side: true });
+    }
+
+    async function renderTrendsInline() {
+      trendsContent.innerHTML = '<div style="color:var(--muted);font-size:13px;padding:8px 0">최신 법률안을 불러오는 중...</div>';
+      const data = await fetchLatestBills(3);
+      renderTrendItems(trendsContent, data, { side: false });
     }
 
     renderTrendsToSide();
     renderTrendsInline();
 
     document.getElementById('refreshTrends').addEventListener('click', () => {
-      renderTrendsToSide();
       const btn = document.getElementById('refreshTrends');
       btn.textContent = '갱신 중...';
-      setTimeout(() => btn.textContent = '새로고침', 900);
+      renderTrendsToSide().then(() => { btn.textContent = '새로고침'; });
     });
     document.getElementById('refreshInline').addEventListener('click', () => {
       renderTrendsInline();
@@ -247,10 +264,13 @@ const features = Array.from(document.querySelectorAll('.feature'));
       `);
     });
 
-    document.getElementById('openTrendsModal').addEventListener('click', () => {
-      openModal('전체 최신 동향', '최근 이슈와 의안 상태 변동을 시간순으로 확인합니다.', '<div style="max-height:300px;overflow:auto;padding-right:10px">' +
-        generateTrends().map(d => `<div style="padding:12px 0;border-bottom:1px solid rgba(0,0,0,0.05)"><strong style="color:var(--blue-text)">${d.title}</strong><div style="color:var(--muted);font-size:13px;margin-top:6px">${d.time}</div></div>`).join('') +
-        '</div>');
+    document.getElementById('openTrendsModal').addEventListener('click', async () => {
+      openModal('전체 최신 동향', '국회에 발의된 법률안을 최신순으로 확인합니다.', '<div style="padding:20px;text-align:center;color:var(--muted)">불러오는 중…</div>', { hideAction: true });
+      const data = await fetchLatestBills(10);
+      const rows = data.length
+        ? data.map(d => `<div style="padding:12px 0;border-bottom:1px solid rgba(0,0,0,0.05)"><strong style="color:var(--blue-text)">${d.link ? `<a href="${d.link}" target="_blank" rel="noopener" style="color:var(--blue-text);text-decoration:none">${d.title}</a>` : d.title}</strong><div style="color:var(--muted);font-size:13px;margin-top:6px">${d.time}</div></div>`).join('')
+        : '<div style="color:var(--muted);font-size:13px">최신 법률안을 불러오지 못했습니다.</div>';
+      openModal('전체 최신 동향', '국회에 발의된 법률안을 최신순으로 확인합니다.', `<div style="max-height:300px;overflow:auto;padding-right:10px">${rows}</div>`, { hideAction: true });
     });
 
     document.getElementById('openCommunityFull').addEventListener('click', () => {

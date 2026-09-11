@@ -50,6 +50,16 @@
           <div class="pill">목표: 접근성 · 신뢰성 · 교육</div>
           <div style="color:var(--muted);font-size:14px">공공 API 및 뉴스 데이터를 연결해 실시간으로 갱신됩니다.</div>
         </div>
+
+        <div class="bill-trend-block bill-trend-block--large" aria-label="월간 법안 발의 추이">
+          <div class="bill-trend-head">
+            <h4>월간 법안 발의 추이</h4>
+            <select id="billTrendMonthSelect" class="bill-trend-select" aria-label="조회할 월 선택"></select>
+          </div>
+          <div class="bill-trend-chart" id="billTrendChart" aria-live="polite">
+            <!-- 동적으로 채워짐: 막대 그래프 또는 단일 월 필터 결과 -->
+          </div>
+        </div>
       </article>
 
       <aside class="side-card" aria-label="사이드 최신 소식">
@@ -67,16 +77,6 @@
           <button class="small-btn" id="openTrendsModal">전체 보기</button>
           <button class="small-btn" id="openSubscribe">구독하기</button>
           <button class="small-btn" id="openCommunity">게시판 보기</button>
-        </div>
-
-        <div class="bill-trend-block" aria-label="월간 법안 발의 추이">
-          <div class="bill-trend-head">
-            <h4>월간 법안 발의 추이</h4>
-            <select id="billTrendMonthSelect" class="bill-trend-select" aria-label="조회할 월 선택"></select>
-          </div>
-          <div class="bill-trend-chart" id="billTrendChart" aria-live="polite">
-            <!-- 동적으로 채워짐: 막대 그래프 -->
-          </div>
         </div>
       </aside>
     </section>

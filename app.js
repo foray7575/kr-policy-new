@@ -196,9 +196,43 @@ const features = Array.from(document.querySelectorAll('.feature'));
       '중처법': ['중대재해', '산업안전보건법', '사업주 책임']
     };
     const DEFAULT_SEARCH_SUGGESTIONS = ['노동조합', '형사소송법', '중대재해'];
+    // 자동완성/유사어 제안에 쓰이는 키워드 풀: 언론 키워드(사전 key) + 매핑된 법률 용어(사전 value) 전체
+    const KNOWN_SEARCH_TERMS = Array.from(new Set([
+      ...Object.keys(MEDIA_KEYWORD_MAP),
+      ...Object.values(MEDIA_KEYWORD_MAP).flat()
+    ]));
 
     let lastSearchItems = [];
     let currentDetailItem = null;
+
+    // 레벤슈타인 거리: 오타 포함 검색어와 사전 키워드 사이의 유사도를 순수 클라이언트 계산으로 측정(AI/API 미사용)
+    function levenshteinDistance(a, b) {
+      const m = a.length, n = b.length;
+      if (m === 0) return n;
+      if (n === 0) return m;
+      const dp = Array.from({ length: m + 1 }, () => new Array(n + 1).fill(0));
+      for (let i = 0; i <= m; i++) dp[i][0] = i;
+      for (let j = 0; j <= n; j++) dp[0][j] = j;
+      for (let i = 1; i <= m; i++) {
+        for (let j = 1; j <= n; j++) {
+          dp[i][j] = a[i - 1] === b[j - 1]
+            ? dp[i - 1][j - 1]
+            : 1 + Math.min(dp[i - 1][j], dp[i][j - 1], dp[i - 1][j - 1]);
+        }
+      }
+      return dp[m][n];
+    }
+
+    function findClosestKeywords(query, limit) {
+      const q = (query || '').trim();
+      if (!q) return [];
+      return KNOWN_SEARCH_TERMS
+        .map(term => ({ term, dist: levenshteinDistance(q, term) }))
+        .filter(x => x.term !== q && x.dist <= Math.max(2, Math.ceil(q.length / 2)))
+        .sort((a, b) => a.dist - b.dist)
+        .slice(0, limit || 3)
+        .map(x => x.term);
+    }
 
     async function fetchBills(term) {
       const res = await fetch(`/api/nanet-search?q=${encodeURIComponent(term)}`);
@@ -275,8 +309,8 @@ const features = Array.from(document.querySelectorAll('.feature'));
         <div class="post" style="margin-top:10px;cursor:pointer" data-action="open-search-detail" data-idx="${i}">
           <div class="title">${escapeSearchHtml(item.title || '(제목 없음)')}${statusBadge}</div>
           <div class="meta">${metaParts.join(' · ')}</div>
-          <div style="margin-top:8px;display:flex;gap:8px;flex-wrap:wrap">
-            <button type="button" class="small-btn" style="padding:6px 12px;font-size:12px" data-action="toggle-save" data-idx="${i}">${bookmarked ? '저장됨 ✓' : '저장'}</button>
+          <div style="margin-top:8px;display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+            <button type="button" class="small-btn" style="padding:6px 10px;font-size:16px;line-height:1" data-action="toggle-save" data-idx="${i}" aria-label="${bookmarked ? '관심 목록에서 제거' : '관심 목록에 저장'}" title="${bookmarked ? '관심 목록에서 제거' : '관심 목록에 저장'}">${bookmarked ? '★' : '☆'}</button>
             ${item.link ? `<a href="${item.link}" target="_blank" rel="noopener" class="small-btn" style="padding:6px 12px;font-size:12px;text-decoration:none;display:inline-block" onclick="event.stopPropagation()">원문 보기 →</a>` : ''}
           </div>
         </div>`;
@@ -307,21 +341,24 @@ const features = Array.from(document.querySelectorAll('.feature'));
             제안이유·주요내용 원문은 열린국회정보 「국회의원 발의법률안」 API에서 별도 제공되지 않아 이 화면에서는 요약할 수 없습니다. 아래 [국회 원문 보기]에서 전체 내용을 확인하실 수 있습니다.
           </div>
           <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:6px">
-            <button type="button" class="small-btn" style="background:var(--blue-primary);color:#fff;border-color:var(--blue-primary)" data-action="toggle-save-detail">${bookmarked ? '관심 목록에서 제거' : '관심 목록에 저장'}</button>
+            <button type="button" class="small-btn" style="padding:8px 14px;font-size:18px;line-height:1;background:var(--blue-primary);color:#fff;border-color:var(--blue-primary)" data-action="toggle-save-detail" aria-label="${bookmarked ? '관심 목록에서 제거' : '관심 목록에 저장'}" title="${bookmarked ? '관심 목록에서 제거' : '관심 목록에 저장'}">${bookmarked ? '★' : '☆'}</button>
             ${item.link ? `<a href="${item.link}" target="_blank" rel="noopener" class="small-btn" style="text-decoration:none;display:inline-block">국회 원문 보기 →</a>` : ''}
           </div>
         </div>`;
       openModal(item.title || '(제목 없음)', '법안 상세 정보', body, { hideAction: true });
     }
 
-    function renderBookmarkList() {
+    // 관심 목록은 모달이 아닌 정책용어사전 옆(#bookmarkPanelList)에 상시 노출된다
+    function renderBookmarkPanel() {
+      const panelEl = document.getElementById('bookmarkPanelList');
+      if (!panelEl) return;
       const list = getBookmarks();
       if (!list.length) {
-        openModal('관심 목록', '저장된 법안이 없습니다.', '<div style="color:var(--muted);font-size:13px;padding:10px 0">검색 결과에서 [저장] 버튼을 눌러 관심 있는 법안을 추가해보세요.</div>', { hideAction: true });
+        panelEl.innerHTML = '<div style="color:var(--muted);font-size:13px;padding:8px 0">저장된 법안이 없습니다. 검색 결과의 ☆ 아이콘을 눌러 추가해보세요.</div>';
         return;
       }
       const rows = list.map((item, i) => renderBookmarkCard(item, i)).join('');
-      openModal('관심 목록', `저장된 법안 ${list.length}건`, `<div style="max-height:360px;overflow:auto">${rows}</div><div style="margin-top:14px;text-align:right"><button type="button" class="small-btn" data-action="clear-bookmarks">전체 삭제</button></div>`, { hideAction: true });
+      panelEl.innerHTML = `<div style="max-height:360px;overflow:auto">${rows}</div><div style="margin-top:14px;text-align:right"><button type="button" class="small-btn" data-action="clear-bookmarks">전체 삭제</button></div>`;
     }
 
     // --- 검색 결과 / 결과 없음 렌더링 ---
@@ -342,12 +379,19 @@ const features = Array.from(document.querySelectorAll('.feature'));
       openModal('국회도서관 검색 결과', title, `${header}<div style="max-height:360px;overflow:auto">${rows}</div>`, { hideAction: true });
     }
 
-    function renderSearchNoResult(original, suggestions) {
-      const list = (suggestions && suggestions.length) ? suggestions : DEFAULT_SEARCH_SUGGESTIONS;
+    function renderSearchNoResult(original, mappedSuggestions) {
+      let list = mappedSuggestions;
+      let isFuzzy = false;
+      if (!list || !list.length) {
+        const closest = findClosestKeywords(original, 3);
+        if (closest.length) { list = closest; isFuzzy = true; }
+      }
+      if (!list || !list.length) list = DEFAULT_SEARCH_SUGGESTIONS;
+      const heading = isFuzzy ? '혹시 이 검색어를 찾으셨나요?' : '추천 검색';
       const suggestionHtml = list.map(s =>
         `<button type="button" class="chip" style="cursor:pointer;font:inherit" data-action="search-suggestion" data-keyword="${escapeSearchHtml(s)}">${escapeSearchHtml(s)}</button>`
       ).join('');
-      openModal('관련 정책 키워드를 찾지 못했습니다.', `"${original}"에 대한 검색 결과가 없습니다.`, `<div style="margin-top:4px"><div style="font-weight:700;color:var(--blue-text);margin-bottom:10px">추천 검색</div><div class="chips">${suggestionHtml}</div></div>`, { hideAction: true });
+      openModal('관련 정책 키워드를 찾지 못했습니다.', `"${original}"에 대한 검색 결과가 없습니다.`, `<div style="margin-top:4px"><div style="font-weight:700;color:var(--blue-text);margin-bottom:10px">${heading}</div><div class="chips">${suggestionHtml}</div></div>`, { hideAction: true });
     }
 
     // --- 검색 메인 흐름: 1차(원본) -> 2차(언론 키워드 사전 확인) -> 3차(매핑 키워드 순차 검색) -> 4차(통합+중복제거) ---
@@ -387,15 +431,46 @@ const features = Array.from(document.querySelectorAll('.feature'));
         openModal('검색 실패', '국회도서관 API 호출에 실패했습니다. 잠시 후 다시 시도해주세요.', `<div style="color:var(--muted);font-size:13px">${escapeSearchHtml(err.message || '')}</div>`, { hideAction: true });
       }
     }
-    document.getElementById('searchInput').addEventListener('keydown', (e) => {
-      if (e.key === 'Enter') {
-        e.preventDefault();
-        runNanetSearch(document.getElementById('searchInput').value.trim());
-      }
-    });
+    const searchInputEl = document.getElementById('searchInput');
+    const searchAutocompleteEl = document.getElementById('searchAutocomplete');
 
-    // --- 모달 내부 동적 콘텐츠(카드/버튼/추천칩)에 대한 이벤트 위임 ---
-    modalBody.addEventListener('click', (e) => {
+    function renderAutocomplete(query) {
+      if (!searchAutocompleteEl) return;
+      const q = (query || '').trim();
+      if (!q) { searchAutocompleteEl.innerHTML = ''; searchAutocompleteEl.style.display = 'none'; return; }
+      const matches = KNOWN_SEARCH_TERMS.filter(t => t.includes(q)).slice(0, 6);
+      if (!matches.length) { searchAutocompleteEl.innerHTML = ''; searchAutocompleteEl.style.display = 'none'; return; }
+      searchAutocompleteEl.innerHTML = matches.map(t => {
+        const isMediaKeyword = !!MEDIA_KEYWORD_MAP[t];
+        return `<div class="search-autocomplete-item" data-action="autocomplete-pick" data-keyword="${escapeSearchHtml(t)}">${escapeSearchHtml(t)}${isMediaKeyword ? '<span class="ac-tag">언론 키워드</span>' : ''}</div>`;
+      }).join('');
+      searchAutocompleteEl.style.display = 'block';
+    }
+
+    if (searchInputEl) {
+      searchInputEl.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          if (searchAutocompleteEl) searchAutocompleteEl.style.display = 'none';
+          runNanetSearch(searchInputEl.value.trim());
+        }
+      });
+      searchInputEl.addEventListener('input', () => renderAutocomplete(searchInputEl.value));
+      searchInputEl.addEventListener('focus', () => renderAutocomplete(searchInputEl.value));
+      searchInputEl.addEventListener('blur', () => {
+        setTimeout(() => { if (searchAutocompleteEl) searchAutocompleteEl.style.display = 'none'; }, 150);
+      });
+    }
+
+    // --- 검색/관심목록/용어사전 동적 콘텐츠(모달 + 상시 패널 모두)에 대한 이벤트 위임(document 단위) ---
+    document.addEventListener('click', (e) => {
+      const acItem = e.target.closest('[data-action="autocomplete-pick"]');
+      if (acItem) {
+        searchInputEl.value = acItem.dataset.keyword;
+        if (searchAutocompleteEl) searchAutocompleteEl.style.display = 'none';
+        runNanetSearch(acItem.dataset.keyword);
+        return;
+      }
       const suggBtn = e.target.closest('[data-action="search-suggestion"]');
       if (suggBtn) {
         runNanetSearch(suggBtn.dataset.keyword);
@@ -407,27 +482,35 @@ const features = Array.from(document.querySelectorAll('.feature'));
         const idx = Number(saveBtn.dataset.idx);
         const item = lastSearchItems[idx];
         toggleBookmark(item);
-        saveBtn.textContent = isBookmarked(item) ? '저장됨 ✓' : '저장';
+        const nowSaved = isBookmarked(item);
+        saveBtn.textContent = nowSaved ? '★' : '☆';
+        saveBtn.title = nowSaved ? '관심 목록에서 제거' : '관심 목록에 저장';
+        saveBtn.setAttribute('aria-label', saveBtn.title);
+        renderBookmarkPanel();
         return;
       }
       const saveDetailBtn = e.target.closest('[data-action="toggle-save-detail"]');
       if (saveDetailBtn) {
         if (!currentDetailItem) return;
         toggleBookmark(currentDetailItem);
-        saveDetailBtn.textContent = isBookmarked(currentDetailItem) ? '관심 목록에서 제거' : '관심 목록에 저장';
+        const nowSaved = isBookmarked(currentDetailItem);
+        saveDetailBtn.textContent = nowSaved ? '★' : '☆';
+        saveDetailBtn.title = nowSaved ? '관심 목록에서 제거' : '관심 목록에 저장';
+        saveDetailBtn.setAttribute('aria-label', saveDetailBtn.title);
+        renderBookmarkPanel();
         return;
       }
       const removeBtn = e.target.closest('[data-action="remove-bookmark"]');
       if (removeBtn) {
         e.stopPropagation();
         removeBookmarkAt(Number(removeBtn.dataset.idx));
-        renderBookmarkList();
+        renderBookmarkPanel();
         return;
       }
       const clearBtn = e.target.closest('[data-action="clear-bookmarks"]');
       if (clearBtn) {
         clearAllBookmarks();
-        renderBookmarkList();
+        renderBookmarkPanel();
         return;
       }
       const bmCard = e.target.closest('[data-action="open-bookmark-detail"]');
@@ -442,11 +525,17 @@ const features = Array.from(document.querySelectorAll('.feature'));
         openBillDetail(lastSearchItems[idx]);
         return;
       }
+      const glossaryDetailBtn = e.target.closest('[data-action="glossary-detail"]');
+      if (glossaryDetailBtn) {
+        const g = glossaryTerms.find(t => t.term === glossaryDetailBtn.dataset.term);
+        if (g) {
+          openModal(g.term, '정책 용어 상세', `<div style="color:#475569;line-height:1.7;font-size:14px">${escapeGlossaryHtml(g.desc)}</div><div style="margin-top:16px"><a href="${g.url}" target="_blank" rel="noopener" style="color:var(--blue-primary);font-weight:700;font-size:13px">나비스(NABIS) 원문 보기 →</a></div>`, { hideAction: true });
+        }
+        return;
+      }
     });
 
-    document.getElementById('bookmarkListBtn').addEventListener('click', () => {
-      renderBookmarkList();
-    });
+    renderBookmarkPanel();
 
     // --- 모달 유틸리티 ---
     function openModal(title, desc, bodyHTML, opts) {
@@ -549,13 +638,19 @@ const features = Array.from(document.querySelectorAll('.feature'));
     const glossaryShowAllBtn = document.getElementById('glossaryShowAllBtn');
     let glossaryExpanded = false;
 
-    function glossaryRow(g, opts) {
-      const expanded = !!(opts && opts.expanded);
+    function truncateGlossaryText(text, maxLen) {
+      if (!text) return '';
+      return text.length > maxLen ? `${text.slice(0, maxLen)}…` : text;
+    }
+
+    function glossaryRow(g) {
+      const shortDesc = truncateGlossaryText(g.desc, 55);
+      const needsMore = g.desc && g.desc.length > 55;
       return `
         <div class="post" style="margin-top:10px">
           <div class="title">${escapeGlossaryHtml(g.term)}</div>
-          <div class="meta" style="color:#475569;margin-top:6px;line-height:1.6">${escapeGlossaryHtml(g.desc)}</div>
-          ${expanded ? `<div style="margin-top:8px"><a href="${g.url}" target="_blank" rel="noopener" style="color:var(--blue-primary);font-weight:700;font-size:13px">나비스(NABIS) 원문 보기 →</a></div>` : ''}
+          <div class="meta" style="color:#475569;margin-top:6px;line-height:1.6">${escapeGlossaryHtml(shortDesc)}</div>
+          ${needsMore ? `<button type="button" class="small-btn" style="margin-top:8px;padding:6px 12px;font-size:12px" data-action="glossary-detail" data-term="${escapeGlossaryHtml(g.term)}">자세히 보기</button>` : ''}
         </div>`;
     }
 
@@ -570,7 +665,7 @@ const features = Array.from(document.querySelectorAll('.feature'));
       const featured = glossaryFeaturedTerms
         .map(name => glossaryTerms.find(g => g.term === name))
         .filter(Boolean);
-      glossaryListEl.innerHTML = featured.map(g => glossaryRow(g, { expanded: false })).join('');
+      glossaryListEl.innerHTML = featured.map(g => glossaryRow(g)).join('');
       updateGlossaryToggleLabel();
     }
 
@@ -583,7 +678,7 @@ const features = Array.from(document.querySelectorAll('.feature'));
       if (filtered.length === 0) {
         glossaryListEl.innerHTML = '<div style="color:var(--muted);font-size:13px;padding:10px 0">일치하는 용어가 없습니다.</div>';
       } else {
-        glossaryListEl.innerHTML = filtered.map(g => glossaryRow(g, { expanded: true })).join('');
+        glossaryListEl.innerHTML = filtered.map(g => glossaryRow(g)).join('');
       }
       updateGlossaryToggleLabel();
     }

@@ -11,9 +11,8 @@
 <body>
   <div class="wrap" role="main">
     <div class="top-nav">
-      <div class="top-nav-brand">KR Policy</div>
+      <div class="top-nav-brand"></div>
       <div class="top-nav-actions">
-        <button class="login-link login-link-primary" id="startBannerBtn">무료로 시작하기</button>
         <button class="login-link" id="loginNavBtn">로그인</button>
       </div>
     </div>
@@ -32,51 +31,53 @@
               <circle cx="11" cy="11" r="6" stroke="#1e3a8a" stroke-width="2" stroke-linecap="round"
                 stroke-linejoin="round" />
             </svg>
-            <input id="searchInput" type="search" placeholder="정책·법안 키워드를 입력하세요 (예: 탄소중립, 노란봉투법, 청년)" aria-label="검색어 입력" />
+            <input id="searchInput" type="search" placeholder="정책·법안 키워드를 입력하세요" aria-label="검색어 입력" />
           </div>
-          <button class="search-button" id="searchBtn">검색</button>
+        </div>
+        <div class="banner-promo">
+          <strong>정책과 발의자, 이제는 뉴스처럼 빠르게 파악하세요</strong>
+          <p>최근 정책 수립 동향과 발의자 정보를 뉴스 편집 방식으로 정리해 제공합니다. 정치에 익숙하지 않은 사람도 자연스럽게 따라올 수 있도록 교육적 설명과 맥락을 제공합니다.</p>
         </div>
       </div>
     </section>
 
-    <section class="hero" aria-labelledby="hero-title">
-      <article class="main-article" aria-labelledby="hero-title">
-        <div class="kicker">KR Policy · 요약</div>
-        <h2 id="hero-title" class="headline">정책과 발의자, 이제는 뉴스처럼 빠르게 파악하세요</h2>
-        <p class="lede">최근 정책 수립 동향과 발의자 정보를 뉴스 편집 방식으로 정리해 제공합니다. 정치에 익숙하지 않은 사람도 자연스럽게 따라올 수 있도록 교육적 설명과 맥락을 제공합니다.
-        </p>
-
-        <div style="margin-top:18px;display:flex;gap:12px;align-items:center;flex-wrap:wrap">
-          <div class="pill">목표: 접근성 · 신뢰성 · 교육</div>
-          <div style="color:var(--muted);font-size:14px">공공 API 및 뉴스 데이터를 연결해 실시간으로 갱신됩니다.</div>
-        </div>
-
-        <div class="bill-trend-block bill-trend-block--large" aria-label="월간 법안 발의 추이">
-          <div class="bill-trend-head">
-            <h4>월간 법안 발의 추이</h4>
-            <select id="billTrendMonthSelect" class="bill-trend-select" aria-label="조회할 월 선택"></select>
+    <section class="hero" aria-label="최신 소식과 발의 추이">
+      <div class="hero-card">
+        <div class="hero-news" aria-label="최신 소식">
+          <div class="kicker">KR Policy · 최신 소식</div>
+          <h2 class="headline" style="font-size:22px">실시간 의안·뉴스 헤드라인</h2>
+          <div style="display:flex;gap:10px;align-items:center;margin:0 0 16px">
+            <button class="small-btn" id="refreshTrends">새로고침</button>
+            <div style="color:var(--muted);font-size:13px">국회에 발의된 법률안을 최신순으로 확인하세요</div>
           </div>
-          <div class="bill-trend-chart" id="billTrendChart" aria-live="polite">
-            <!-- 동적으로 채워짐: 막대 그래프 또는 단일 월 필터 결과 -->
+
+          <div class="top-list" id="trendList" aria-live="polite">
+            <!-- 동적으로 채워짐 -->
+          </div>
+
+          <div style="margin-top:16px;display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+            <button class="small-btn" id="openTrendsModal">전체 보기</button>
           </div>
         </div>
-      </article>
 
-      <aside class="side-card" aria-label="사이드 최신 소식">
-        <h3>최신 소식</h3>
-        <div style="display:flex;gap:10px;align-items:center;margin-bottom:12px">
-          <button class="small-btn" id="refreshTrends">새로고침</button>
-          <div style="color:var(--muted);font-size:13px">실시간 의안·뉴스 헤드라인</div>
-        </div>
+        <div class="hero-graph" aria-label="월간 법안 발의 추이">
+          <h3 class="hero-graph-title">월간 법안 발의 추이</h3>
+          <div class="bill-trend-block bill-trend-block--large hero-graph-block" aria-label="월간 법안 발의 추이">
+            <div class="bill-trend-head">
+              <h4>조회 기간 선택</h4>
+              <select id="billTrendMonthSelect" class="bill-trend-select" aria-label="조회할 월 선택"></select>
+            </div>
+            <div class="bill-trend-chart" id="billTrendChart" aria-live="polite">
+              <!-- 동적으로 채워짐: 막대 그래프 또는 누적 월 필터 결과 -->
+            </div>
+          </div>
 
-        <div class="top-list" id="trendList" aria-live="polite">
-          <!-- 동적으로 채워짐 -->
+          <div style="margin-top:18px;display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+            <div class="pill">목표: 접근성 · 신뢰성 · 교육</div>
+          </div>
+          <div style="margin-top:8px;color:var(--muted);font-size:13px">공공 API 및 뉴스 데이터를 연결해 실시간으로 갱신됩니다.</div>
         </div>
-
-        <div style="margin-top:16px;display:flex;gap:10px;align-items:center;flex-wrap:wrap">
-          <button class="small-btn" id="openTrendsModal">전체 보기</button>
-        </div>
-      </aside>
+      </div>
     </section>
 
     <section class="side-card glossary-section" aria-label="정책 용어사전">

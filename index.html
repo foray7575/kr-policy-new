@@ -716,6 +716,9 @@
       background: linear-gradient(90deg, #1c6ce8, #55c6ff, #ff8a00);
     }
     .typing-slide .typing-kicker { color: #1c6ce8; font-size: 12px; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; }
+    .typing-topic-picker { display:flex; gap:10px; margin: 14px 0 4px; flex-wrap:wrap; }
+    .typing-topic-btn { padding:8px 16px; border-radius:999px; border:2px solid #cfe0ff; background:#f3f7ff; color:#1c2c52; font-weight:700; cursor:pointer; font-size:13px; }
+    .typing-topic-btn.active { background:#1c6ce8; border-color:#1c6ce8; color:#fff; box-shadow:0 4px 12px rgba(28,108,232,.3); }
     .typing-slide .typing-kicker:before { content: '\25CF '; color: #ff8a00; }
     .typing-slide h2 { margin: 8px 0 8px; color: #0f2a63; font-size: 25px; font-weight: 900; }
     .typing-slide .typing-lede { margin: 0 0 18px; color: #55648a; line-height: 1.65; }
@@ -968,8 +971,12 @@
 
     <section class="typing-slide" aria-labelledby="typing-title">
       <div class="typing-kicker">POLICY TYPING EXPERIENCE</div>
-      <h2 id="typing-title">노란봉투법, 짧게 나눠 입력해보세요</h2>
-      <p class="typing-lede">긴 설명을 3개의 짧은 문장으로 나눴습니다. 각 문장을 입력하고 확인하면 다음 문장으로 빠르게 넘어갑니다.</p>
+      <h2 id="typing-title">정책 문장, 짧게 나눠 입력해보세요</h2>
+      <p class="typing-lede">원하는 주제를 고르면 해당 정책 설명이 3개의 짧은 문장으로 나뉘어 나타납니다. 각 문장을 입력하고 확인하면 다음 문장으로 빠르게 넘어갑니다.</p>
+      <div class="typing-topic-picker" role="radiogroup" aria-label="타자 게임 주제 선택">
+        <button type="button" class="typing-topic-btn active" id="topicYellowEnvelope" data-topic="yellowEnvelope" aria-pressed="true">노란봉투법</button>
+        <button type="button" class="typing-topic-btn" id="topicSupplementaryInvestigation" data-topic="supplementaryInvestigation" aria-pressed="false">보완수사권</button>
+      </div>
       <div class="typing-orbit" aria-label="문장 진행 상태"><span class="typing-orbit-dot active"></span><span class="typing-orbit-dot"></span><span class="typing-orbit-dot"></span></div>
       <div class="typing-status"><span class="typing-stat" id="typingRound">1 / 3</span><span class="typing-stat" id="typingTimer">시간 0.0초</span></div>
       <div class="typing-policy" id="typingTarget" aria-live="off"></div>
@@ -1246,12 +1253,31 @@
       alert('데이터를 CSV 형식으로 내보냅니다.');
     });
   
-    // --- 노란봉투법 정책 궤도형 타자 체험 ---
-    const typingSentences = [
-      '노란봉투법은 노동조합의 쟁의행위로 발생한 손해배상 청구를 제한하는 법안이다.',
-      '하청 노동자의 교섭권을 넓히는 내용도 주요하게 담고 있다.',
-      '노동자의 권리와 기업의 책임 범위를 함께 생각해볼 수 있다.'
-    ];
+    // --- 정책 궤도형 타자 체험 (주제 선택 가능) ---
+    const typingTopics = {
+      yellowEnvelope: {
+        label: '노란봉투법',
+        title: '노란봉투법, 짧게 나눠 입력해보세요',
+        lede: '긴 설명을 3개의 짧은 문장으로 나눴습니다. 각 문장을 입력하고 확인하면 다음 문장으로 빠르게 넘어갑니다.',
+        sentences: [
+          '노란봉투법은 노동조합의 쟁의행위로 발생한 손해배상 청구를 제한하는 법안이다.',
+          '하청 노동자의 교섭권을 넓히는 내용도 주요하게 담고 있다.',
+          '노동자의 권리와 기업의 책임 범위를 함께 생각해볼 수 있다.'
+        ]
+      },
+      supplementaryInvestigation: {
+        label: '보완수사권',
+        title: '보완수사권, 짧게 나눠 입력해보세요',
+        lede: '검찰과 경찰의 수사 권한 조정을 둘러싼 정책 설명을 3개의 짧은 문장으로 나눴습니다.',
+        sentences: [
+          '보완수사권은 경찰이 송치한 사건을 검찰이 다시 수사할 수 있는 권한이다.',
+          '수사 절차의 견제와 균형을 위해 필요하다는 주장이 있다.',
+          '검찰과 경찰 간 권한 배분을 둘러싼 논쟁이 계속되고 있다.'
+        ]
+      }
+    };
+    let currentTopicKey = 'yellowEnvelope';
+    let typingSentences = typingTopics[currentTopicKey].sentences;
     let typingRoundIndex = 0, typingStartedAt = null, typingTotalChars = 0, typingTotalSeconds = 0;
     const typingAnswers = [];
     const typingTargetEl = document.getElementById('typingTarget');
@@ -1317,10 +1343,32 @@
         typingResult.innerHTML = `<strong>정책 타자 체험 완료!</strong><div class="typing-score"><strong>${grade}</strong><span>${gradeMessage}</span></div>총 입력 글자 수 ${typingTotalChars}자 · 틀린 타자 수 <strong>${wrongChars}자</strong><br>총 소요 시간 <strong>${typingTotalSeconds.toFixed(1)}초</strong> · 평균 타자 <strong>${average}자/분</strong><div class="typing-review"><strong>입력 기록 확인</strong>${review}</div>`;
       }
     }
+    function selectTopic(topicKey) {
+      currentTopicKey = topicKey;
+      const topic = typingTopics[topicKey];
+      typingSentences = topic.sentences;
+      typingRoundIndex = 0; typingStartedAt = null; typingTotalChars = 0; typingTotalSeconds = 0;
+      typingAnswers.length = 0;
+      document.getElementById('typing-title').textContent = topic.title;
+      document.querySelector('.typing-lede').textContent = topic.lede;
+      document.querySelectorAll('.typing-topic-btn').forEach(btn => {
+        const isActive = btn.dataset.topic === topicKey;
+        btn.classList.toggle('active', isActive);
+        btn.setAttribute('aria-pressed', isActive ? 'true' : 'false');
+      });
+      typingInput.value = ''; typingInput.disabled = false;
+      typingRound.textContent = `1 / ${typingSentences.length}`;
+      renderTarget(typingSentences[typingRoundIndex]);
+      typingResult.classList.remove('show'); typingResult.innerHTML = '';
+      refreshOrbit(); updateTypingFast(); typingInput.focus();
+    }
+    document.getElementById('topicYellowEnvelope').addEventListener('click', () => selectTopic('yellowEnvelope'));
+    document.getElementById('topicSupplementaryInvestigation').addEventListener('click', () => selectTopic('supplementaryInvestigation'));
+
     renderTarget(typingSentences[typingRoundIndex]);
     typingInput.addEventListener('input', updateTypingFast);
     typingInput.addEventListener('keydown', (event) => { if (event.key === 'Enter') { event.preventDefault(); finishTyping(); } });
-    document.getElementById('typingReset').addEventListener('click', () => { location.reload(); });
+    document.getElementById('typingReset').addEventListener('click', () => { selectTopic(currentTopicKey); });
 
   </script>
 </body>

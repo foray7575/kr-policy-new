@@ -250,16 +250,6 @@ const features = Array.from(document.querySelectorAll('.feature'));
       if (e.key === 'Escape') closeModal();
     });
 
-    // --- 커뮤니티 / 게시판 ---
-    document.getElementById('openCommunity').addEventListener('click', () => {
-      openModal('게시판으로 이동', '다른 사용자들의 토론과 자료를 확인하고 작성할 수 있습니다.', `
-        <div style="display:flex;gap:10px;flex-direction:column">
-          <div class="post"><div class="title">[토론] 교육개혁의 방향</div><div class="meta">작성자: 시험 · 2026-06-07</div></div>
-          <div style="margin-top:10px"><button class="small-btn" onclick="alert('게시판 전체보기')">전체 게시판 보기</button></div>
-        </div>
-      `);
-    });
-
     modal.addEventListener('click', (e) => {
       if (e.target === modal) closeModal();
     });
@@ -291,20 +281,6 @@ const features = Array.from(document.querySelectorAll('.feature'));
       openModal('무료 시작', '지금 바로 무료 계정으로 핵심 기능을 이용해보세요.');
     });
 
-    document.getElementById('openSubscribe').addEventListener('click', () => {
-      openModal('구독 플랜 선택', '기본 검색은 무료 계정으로 이용하실 수 있습니다. 유료 구독 시 심층 분석과 해외 정책 열람 기능이 해금됩니다.', `
-        <div style="display:flex;flex-direction:column;gap:10px">
-          <div style="display:flex;gap:10px">
-            <button class="small-btn" style="flex:1;background:var(--blue-primary);color:#fff;border-color:var(--blue-primary);padding:10px" onclick="alert('Plus 플랜: 정책 심층 분석 및 열람 자료 범위 확대 (월 4,900원)')">Plus (월 4,900원) — 심층 분석</button>
-            <button class="small-btn" style="flex:1;background:#7e22ce;color:#fff;border-color:#7e22ce;padding:10px" onclick="alert('Pro 플랜: 해외 정책 자료 열람 해금 & API 지원 (월 19,000원)')">Pro (월 19,000원) — 해외 정책</button>
-          </div>
-          <div style="font-size:12px;color:var(--muted);text-align:center;margin-top:4px">
-            자세한 혜택 비교는 하단의 [월정액 요금제 보기]에서 확인하실 수 있습니다.
-          </div>
-        </div>
-      `);
-    });
-
     document.getElementById('openTrendsModal').addEventListener('click', async () => {
       openModal('전체 최신 동향', '국회에 발의된 법률안을 최신순으로 확인합니다.', '<div style="padding:20px;text-align:center;color:var(--muted)">불러오는 중…</div>', { hideAction: true });
       const data = await fetchLatestBills(10);
@@ -321,7 +297,7 @@ const features = Array.from(document.querySelectorAll('.feature'));
           <div><strong style="color:var(--blue-text)">Q. 무료로 이용할 수 있나요?</strong><p style="margin:6px 0 0;color:var(--muted);font-size:14px">네, Free 계정으로도 국회 법률안 검색을 그대로 이용하실 수 있습니다. 유료 플랜은 심층 정책 분석 보고서, 열람 가능 자료 범위 확대, 해외 정책 열람 기능 등이 추가로 해금되는 옵션입니다.</p></div>
           <div><strong style="color:var(--blue-text)">Q. 문의는 어떻게 하나요?</strong><p style="margin:6px 0 0;color:var(--muted);font-size:14px">고객센터(paperplane@jnu.ac.kr)로 이메일 보내주시면 답변드립니다.</p></div>
         </div>
-      `);
+      `, { hideAction: true });
     });
 
     // --- 정책 용어사전 (출처: 나비스 NABIS 정책용어사전, nabis.go.kr) ---

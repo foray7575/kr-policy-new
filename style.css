@@ -177,7 +177,7 @@
       gap: 12px;
       margin-top: 22px;
       width: 100%;
-      max-width: 820px;
+      max-width: 1640px;
       position: relative;
       z-index: 4;
     }
@@ -1028,7 +1028,7 @@
       isolation: isolate;
     }
     .typing-slide:before {
-      content: 'POLICY TYPING';
+      content: 'LEARN BY TYPING';
       position: absolute;
       right: 22px;
       top: 20px;

@@ -1,4 +1,12 @@
 const features = Array.from(document.querySelectorAll('.feature'));
+
+    // --- 타이틀 오빗 디자인 호버 스핀 효과 ---
+    const titleOrbitBanner = document.querySelector('.title-orbit-preview');
+    const titleOrbitH1 = titleOrbitBanner ? titleOrbitBanner.querySelector('.banner-text h1') : null;
+    if (titleOrbitBanner && titleOrbitH1) {
+      titleOrbitH1.addEventListener('mouseenter', () => titleOrbitBanner.classList.add('orbit-spin-active'));
+      titleOrbitH1.addEventListener('mouseleave', () => titleOrbitBanner.classList.remove('orbit-spin-active'));
+    }
     const trendList = document.getElementById('trendList');
     const trendsContent = document.getElementById('trendsContent');
     const modal = document.getElementById('modal');
@@ -94,46 +102,55 @@ const features = Array.from(document.querySelectorAll('.feature'));
       return String(value).replace(/[&<>"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
     }
     async function runNanetSearch(query) {
-      openModal('국회도서관 검색 중...', `"${query}"에 대한 국회도서관 자료를 불러오는 중입니다.`, '<div style="padding:20px;text-align:center;color:var(--muted)">잠시만 기다려 주세요…</div>');
+      openModal('국회도서관 검색 중...', `"${query}"에 대한 국회도서관 자료를 불러오는 중입니다.`, '<div style="padding:20px;text-align:center;color:var(--muted)">잠시만 기다려 주세요…</div>', { hideAction: true });
       try {
         const res = await fetch(`/api/nanet-search?q=${encodeURIComponent(query)}`);
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         const data = await res.json();
         const items = Array.isArray(data.items) ? data.items : [];
         if (items.length === 0) {
-          openModal('검색 결과 없음', `"${query}"에 대한 국회도서관 검색 결과가 없습니다.`);
+          openModal('검색 결과 없음', `"${query}"에 대한 국회도서관 검색 결과가 없습니다.`, '', { hideAction: true });
           return;
         }
-        const rows = items.slice(0, 10).map(item => `
+        const rows = items.slice(0, 10).map(item => {
+          const metaParts = [escapeSearchHtml(item.author || '저자 미상')];
+          if (item.pubDate) metaParts.push(escapeSearchHtml(item.pubDate));
+          else if (item.pubYear) metaParts.push(escapeSearchHtml(item.pubYear));
+          if (item.committee) metaParts.push(escapeSearchHtml(item.committee));
+          const statusBadge = item.status ? `<span class="pill" style="margin-left:8px;font-size:11px;padding:4px 10px">${escapeSearchHtml(item.status)}</span>` : '';
+          return `
           <div class="post" style="margin-top:10px">
-            <div class="title">${escapeSearchHtml(item.title || '(제목 없음)')}</div>
-            <div class="meta">${escapeSearchHtml(item.author || '저자 미상')} · ${escapeSearchHtml(item.pubYear || '')}</div>
+            <div class="title">${escapeSearchHtml(item.title || '(제목 없음)')}${statusBadge}</div>
+            <div class="meta">${metaParts.join(' · ')}</div>
             ${item.link ? `<div style="margin-top:8px"><a href="${item.link}" target="_blank" rel="noopener" style="color:var(--blue-primary);font-weight:700">원문/상세 보기 →</a></div>` : ''}
-          </div>`).join('');
-        openModal('국회도서관 검색 결과', `"${query}"에 대한 검색 결과 ${items.length}건`, `<div style="max-height:360px;overflow:auto">${rows}</div>`);
+          </div>`;
+        }).join('');
+        openModal('국회도서관 검색 결과', `"${query}"에 대한 검색 결과 ${items.length}건`, `<div style="max-height:360px;overflow:auto">${rows}</div>`, { hideAction: true });
       } catch (err) {
-        openModal('검색 실패', '국회도서관 API 호출에 실패했습니다. 잠시 후 다시 시도해주세요.', `<div style="color:var(--muted);font-size:13px">${escapeSearchHtml(err.message || '')}</div>`);
+        openModal('검색 실패', '국회도서관 API 호출에 실패했습니다. 잠시 후 다시 시도해주세요.', `<div style="color:var(--muted);font-size:13px">${escapeSearchHtml(err.message || '')}</div>`, { hideAction: true });
       }
     }
     document.getElementById('searchBtn').addEventListener('click', () => {
       const q = document.getElementById('searchInput').value.trim();
-      const scope = document.getElementById('searchScope').value;
       if (!q) {
         openModal('검색어를 입력해 주세요', '검색어를 입력하면 관련 법안과 발의자가 표시됩니다.');
         return;
       }
-      if (scope === 'policy') {
-        runNanetSearch(q);
-        return;
+      runNanetSearch(q);
+    });
+    document.getElementById('searchInput').addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        document.getElementById('searchBtn').click();
       }
-      openModal('검색 실행 (데모)', `"${q}"에 대한 샘플 결과를 불러왔습니다. 실제 서비스는 공공 API 연동이 필요합니다.`);
     });
 
     // --- 모달 유틸리티 ---
-    function openModal(title, desc, bodyHTML) {
+    function openModal(title, desc, bodyHTML, opts) {
       modalTitle.textContent = title;
       modalDesc.textContent = desc || '';
       modalBody.innerHTML = bodyHTML || '';
+      modalAction.style.display = (opts && opts.hideAction) ? 'none' : '';
       modal.style.display = 'flex';
       modal.setAttribute('aria-hidden', 'false');
     }
@@ -400,6 +417,7 @@ const features = Array.from(document.querySelectorAll('.feature'));
       typingRoundIndex = 0; typingStartedAt = null; typingTotalChars = 0; typingTotalSeconds = 0;
       typingAnswers.length = 0;
       document.getElementById('typing-title').textContent = topic.label;
+      document.getElementById('typingPlayArea').classList.add('active');
       document.querySelectorAll('.typing-topic-btn').forEach(btn => {
         const isActive = btn.dataset.topic === topicKey;
         btn.classList.toggle('active', isActive);

@@ -1,6 +1,5 @@
 const features = Array.from(document.querySelectorAll('.feature'));
     const trendList = document.getElementById('trendList');
-    const trendsContent = document.getElementById('trendsContent');
     const modal = document.getElementById('modal');
     const modalTitle = document.getElementById('modalTitle');
     const modalDesc = document.getElementById('modalDesc');
@@ -96,22 +95,12 @@ const features = Array.from(document.querySelectorAll('.feature'));
       renderTrendItems(trendList, data, { side: true });
     }
 
-    async function renderTrendsInline() {
-      trendsContent.innerHTML = '<div style="color:var(--muted);font-size:13px;padding:8px 0">최신 법률안을 불러오는 중...</div>';
-      const data = await fetchLatestBills(3);
-      renderTrendItems(trendsContent, data, { side: false });
-    }
-
     renderTrendsToSide();
-    renderTrendsInline();
 
     document.getElementById('refreshTrends').addEventListener('click', () => {
       const btn = document.getElementById('refreshTrends');
       btn.textContent = '갱신 중...';
       renderTrendsToSide().then(() => { btn.textContent = '새로고침'; });
-    });
-    document.getElementById('refreshInline').addEventListener('click', () => {
-      renderTrendsInline();
     });
 
     // --- 검색: 국회도서관 Open API 연동 ---
@@ -194,31 +183,6 @@ const features = Array.from(document.querySelectorAll('.feature'));
       `);
     });
 
-    document.getElementById('openNewPost').addEventListener('click', () => {
-      openModal('새 글 작성', '본문을 입력하고 제출하면 샘플 게시물이 추가됩니다.', `
-        <div style="display:flex;flex-direction:column;gap:12px">
-          <input id="postTitle" placeholder="제목 입력" style="padding:12px;border-radius:12px;border:1px solid var(--card-border);background:#f8fafc"/>
-          <textarea id="postBody" placeholder="내용 입력 (데모)" style="padding:12px;border-radius:12px;border:1px solid var(--card-border);min-height:120px;background:#f8fafc"></textarea>
-          <div style="display:flex;gap:10px;justify-content:flex-end">
-            <button class="small-btn" onclick="submitDemoPost()">게시하기</button>
-          </div>
-        </div>
-      `);
-      modalAction.style.display = 'none';
-    });
-
-    function submitDemoPost() {
-      const title = document.getElementById('postTitle').value.trim() || '제목 없음';
-      const body = document.getElementById('postBody').value.trim() || '';
-      const postsArea = document.getElementById('postsArea');
-      const el = document.createElement('div');
-      el.className = 'post';
-      el.innerHTML = `<div class="title">${title}</div><div class="meta">작성자: 나 · 지금</div><div style="margin-top:10px;color:var(--muted);font-size:14px;line-height:1.6">${body}</div>`;
-      postsArea.insertBefore(el, postsArea.firstChild);
-      closeModal();
-      modalAction.style.display = '';
-    }
-
     modal.addEventListener('click', (e) => {
       if (e.target === modal) closeModal();
     });
@@ -273,10 +237,6 @@ const features = Array.from(document.querySelectorAll('.feature'));
       openModal('전체 최신 동향', '국회에 발의된 법률안을 최신순으로 확인합니다.', `<div style="max-height:300px;overflow:auto;padding-right:10px">${rows}</div>`, { hideAction: true });
     });
 
-    document.getElementById('openCommunityFull').addEventListener('click', () => {
-      openModal('게시판 전체', '활성화된 게시글을 시간순으로 확인하고 참여할 수 있습니다.');
-    });
-
     document.getElementById('bottomFaqBtn').addEventListener('click', () => {
       openModal('자주 묻는 질문 (FAQ)', '많이 물어보시는 내용을 정리했습니다.', `
         <div style="display:flex;flex-direction:column;gap:14px">
@@ -286,6 +246,85 @@ const features = Array.from(document.querySelectorAll('.feature'));
         </div>
       `);
     });
+
+    // --- 정책 용어사전 (출처: 나비스 NABIS 정책용어사전, nabis.go.kr) ---
+    const glossaryTerms = [
+      { term: '경제자유구역', desc: '외국인투자기업의 경영환경과 외국인의 생활여건을 개선하여 외국인투자를 촉진하고 지역 간 균형발전을 도모하기 위해 지정·운영되는 경제특구다.', url: 'https://www.nabis.go.kr/termsDetailView.do?menucd=189&gbnCode=S51&eventNo=12' },
+      { term: '광역경제권', desc: '지역 간 연계 및 협력을 통해 지역경쟁력을 효율적으로 향상시키기 위해 기존 경제·산업권과 역사·문화적 동질성을 고려해 설정한 권역이다.', url: 'https://www.nabis.go.kr/termsDetailView.do?menucd=189&gbnCode=S51&eventNo=16' },
+      { term: '균형발전지표', desc: '지역의 발전 수준을 객관적·주관적으로 종합 진단하기 위해 개발된 지표로, 핵심지표(인구증감률, 재정자립도)와 8개 부문의 객관·주관 지표로 구성된다.', url: 'https://www.nabis.go.kr/termsDetailView.do?menucd=189&gbnCode=S51&eventNo=344' },
+      { term: '균형발전특별법', desc: '지역 특성에 맞는 발전과 지역 간 연계·협력 증진을 통해 지역경쟁력을 높이고 삶의 질을 향상시켜 균형 있는 발전에 이바지하고자 2004년 제정된 법률이다.', url: 'https://www.nabis.go.kr/termsDetailView.do?menucd=189&gbnCode=S51&eventNo=31' },
+      { term: '균형발전특별회계', desc: '지역별 특화발전과 지역주민의 삶의 질 향상을 위한 사업을 효율적으로 추진하기 위해 설치된 회계로, 경제발전·생활기반 등 계정으로 구성된다.', url: 'https://www.nabis.go.kr/termsDetailView.do?menucd=189&gbnCode=S51&eventNo=30' },
+      { term: '규제자유특구(규제프리존)', desc: '지역별 신산업 육성을 위해 규제샌드박스 등 규제특례와 지자체·정부 투자계획을 담은 특구계획에 따라 비수도권 지역에 지정된 구역이다.', url: 'https://www.nabis.go.kr/termsDetailView.do?menucd=189&gbnCode=S51&eventNo=335' },
+      { term: '그린뉴딜', desc: '그린(Green)과 뉴딜(New Deal)의 합성어로, 저탄소 경제구조로 전환하며 기후위기에 대응하고 재생에너지·친환경산업 투자로 일자리를 창출하는 정책이다.', url: 'https://www.nabis.go.kr/termsDetailView.do?menucd=189&gbnCode=S51&eventNo=371' },
+      { term: '도시재생뉴딜', desc: '인구감소·산업쇠퇴 등으로 쇠퇴한 도시를 지역역량 강화와 새로운 기능 도입을 통해 활성화시키는 도시재생사업에 재정을 집중 투입하는 사업이다.', url: 'https://www.nabis.go.kr/termsDetailView.do?menucd=189&gbnCode=S51&eventNo=336' },
+      { term: '스마트시티(Smart City)', desc: '건설·정보통신기술을 융복합한 도시기반시설을 바탕으로 다양한 도시서비스를 실시간으로 제공하는 지속가능한 도시를 말한다.', url: 'https://www.nabis.go.kr/termsDetailView.do?menucd=189&gbnCode=S51&eventNo=322' },
+      { term: '사회적기업', desc: '취약계층에게 일자리·사회서비스를 제공하거나 지역사회에 공헌하는 등 사회적 목적을 우선 추구하면서 영업활동을 수행하는 기업 및 조직을 말한다.', url: 'https://www.nabis.go.kr/termsDetailView.do?menucd=189&gbnCode=S51&eventNo=77' },
+      { term: '협동조합', desc: '공동으로 소유하고 민주적으로 운영되는 사업체를 통해 공동의 경제적·사회적·문화적 필요와 욕구를 충족시키기 위해 자발적으로 모인 사람들의 자율적 단체다.', url: 'https://www.nabis.go.kr/termsDetailView.do?menucd=189&gbnCode=S51&eventNo=95' },
+      { term: '재정자립도', desc: '재정수입의 자체 충당능력을 나타내는 세입분석지표로, 일반회계 세입 중 지방세와 세외수입의 비율로 측정하며 비율이 높을수록 세입징수 기반이 좋음을 의미한다.', url: 'https://www.nabis.go.kr/termsDetailView.do?menucd=189&gbnCode=S51&eventNo=105' },
+      { term: '지방소비세 제도', desc: '지방재정의 자주재원 확충을 위해 국세인 부가가치세의 일부를 지방세로 전환한 제도로, 2010년부터 도입되었다.', url: 'https://www.nabis.go.kr/termsDetailView.do?menucd=189&gbnCode=S51&eventNo=213' },
+      { term: '자치경찰제도', desc: '지역적 특수성에 부합하고 지역주민의 수요에 부응하기 위해 국가경찰과 별도로 지방자치단체가 담당하는 경찰 사무를 운영하는 제도다.', url: 'https://www.nabis.go.kr/termsDetailView.do?menucd=189&gbnCode=S51&eventNo=254' },
+      { term: '젠트리피케이션', desc: '중산층 이상의 계층이 낙후된 도심 지역으로 유입되면서 지역이 고급화되고, 이로 인한 임대료 상승으로 기존 저소득층 주민이 밀려나는 현상을 말한다.', url: 'https://www.nabis.go.kr/termsDetailView.do?menucd=189&gbnCode=S51&eventNo=280' },
+      { term: '고향납세', desc: '자신이 거주하는 지역 이외의 지방자치단체에 기부하면 세액공제 혜택을 주는 제도로, 일본에서 시작되어 국내 고향사랑기부제 논의의 모태가 되었다.', url: 'https://www.nabis.go.kr/termsDetailView.do?menucd=189&gbnCode=S51&eventNo=292' },
+      { term: '지역화폐', desc: '국가의 공식화폐와 달리 특정 지역 내에서만 통용되는 화폐로, 법정화폐를 대체하는 것이 아니라 보완하며 지역 내 자원 순환과 경제 활성화를 목적으로 한다.', url: 'https://www.nabis.go.kr/termsDetailView.do?menucd=189&gbnCode=S51&eventNo=318' },
+      { term: '혁신도시 시즌 2', desc: '수도권 공공기관 지방이전 중심이던 혁신도시 정책을 지역성장 거점으로 육성하기 위해 특화발전과 정주여건 개선, 상생발전에 중점을 두고 추진하는 후속 정책이다.', url: 'https://www.nabis.go.kr/termsDetailView.do?menucd=189&gbnCode=S51&eventNo=332' },
+      { term: 'MZ세대', desc: '1980년대 초~2000년대 초 출생한 밀레니얼 세대와 1990년대 중반~2000년대 초반 출생한 Z세대를 통칭하는 말로, 디지털 환경에 익숙한 특징을 보인다.', url: 'https://www.nabis.go.kr/termsDetailView.do?menucd=189&gbnCode=S51&eventNo=357' },
+      { term: '관계인구', desc: '실제로 거주하지 않지만 지역에 다양하게 참여하며 관계를 맺는 사람들을 뜻하며, 인구소멸시대의 새로운 지역 활성화 대안으로 제시된 개념이다.', url: 'https://www.nabis.go.kr/termsDetailView.do?menucd=189&gbnCode=S51&eventNo=367' },
+      { term: '마이스(MICE)산업', desc: '회의(Meeting)·포상관광(Incentive)·컨벤션(Convention)·전시(Exhibition)를 아우르는 산업으로, 높은 부가가치를 창출하는 미래 성장동력산업으로 육성되고 있다.', url: 'https://www.nabis.go.kr/termsDetailView.do?menucd=189&gbnCode=S51&eventNo=201' },
+      { term: '창조경제', desc: '국민의 상상력과 창의성을 과학기술과 ICT에 접목해 새로운 산업과 시장을 창출하고 기존 산업을 강화함으로써 좋은 일자리를 만드는 경제 전략이다.', url: 'https://www.nabis.go.kr/termsDetailView.do?menucd=189&gbnCode=S51&eventNo=178' }
+    ];
+    function escapeGlossaryHtml(value) { return String(value).replace(/[&<>"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch])); }
+    const glossaryFeaturedTerms = ['경제자유구역', '지역화폐'];
+    const glossaryListEl = document.getElementById('glossaryList');
+    const glossarySearchEl = document.getElementById('glossarySearch');
+    const glossaryShowAllBtn = document.getElementById('glossaryShowAllBtn');
+    let glossaryExpanded = false;
+
+    function glossaryRow(g, opts) {
+      const expanded = !!(opts && opts.expanded);
+      return `
+        <div class="post" style="margin-top:10px">
+          <div class="title">${escapeGlossaryHtml(g.term)}</div>
+          <div class="meta" style="color:#475569;margin-top:6px;line-height:1.6">${escapeGlossaryHtml(g.desc)}</div>
+          ${expanded ? `<div style="margin-top:8px"><a href="${g.url}" target="_blank" rel="noopener" style="color:var(--blue-primary);font-weight:700;font-size:13px">나비스(NABIS) 원문 보기 →</a></div>` : ''}
+        </div>`;
+    }
+
+    function renderGlossaryCompact() {
+      glossaryExpanded = false;
+      const featured = glossaryFeaturedTerms
+        .map(name => glossaryTerms.find(g => g.term === name))
+        .filter(Boolean);
+      glossaryListEl.innerHTML = featured.map(g => glossaryRow(g, { expanded: false })).join('');
+    }
+
+    function renderGlossaryFull(filterText) {
+      glossaryExpanded = true;
+      const kw = (filterText || '').trim().toLowerCase();
+      const filtered = kw
+        ? glossaryTerms.filter(g => g.term.toLowerCase().includes(kw) || g.desc.toLowerCase().includes(kw))
+        : glossaryTerms;
+      if (filtered.length === 0) {
+        glossaryListEl.innerHTML = '<div style="color:var(--muted);font-size:13px;padding:10px 0">일치하는 용어가 없습니다.</div>';
+        return;
+      }
+      glossaryListEl.innerHTML = filtered.map(g => glossaryRow(g, { expanded: true })).join('');
+    }
+
+    if (glossaryListEl) {
+      renderGlossaryCompact();
+      if (glossarySearchEl) {
+        glossarySearchEl.addEventListener('input', () => {
+          const value = glossarySearchEl.value;
+          if (!value.trim()) { renderGlossaryCompact(); return; }
+          renderGlossaryFull(value);
+        });
+      }
+      if (glossaryShowAllBtn) {
+        glossaryShowAllBtn.addEventListener('click', () => {
+          renderGlossaryFull(glossarySearchEl ? glossarySearchEl.value : '');
+        });
+      }
+    }
 
         document.getElementById('subscribeBtn').addEventListener('click', () => {
       openModal('월정액 요금제 안내', '무료 계정으로도 정책 검색을 자유롭게 이용하실 수 있습니다. 결제 시 심층 정책 분석과 해외 정책 열람까지 더 넓은 범위의 데이터가 해금됩니다.', `
@@ -328,14 +367,6 @@ const features = Array.from(document.querySelectorAll('.feature'));
       `);
     });
 
-    // 기타 기능 버튼들
-    document.getElementById('demoAddAlert').addEventListener('click', () => {
-      alert('알림 설정을 완료했습니다.');
-    });
-    document.getElementById('demoExport').addEventListener('click', () => {
-      alert('데이터를 CSV 형식으로 내보냅니다.');
-    });
-  
     // --- 정책 궤도형 타자 체험 (주제 선택 가능) ---
     const typingTopics = {
       yellowEnvelope: {

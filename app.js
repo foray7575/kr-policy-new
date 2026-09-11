@@ -297,6 +297,13 @@ const features = Array.from(document.querySelectorAll('.feature'));
       saveBookmarks([]);
     }
 
+    // 유튜브 '저장' 버튼처럼 리본(북마크) 형태의 아이콘: 미저장=아웃라인, 저장됨=채움(파란색)
+    function bookmarkIcon(filled) {
+      return filled
+        ? `<svg width="18" height="18" viewBox="0 0 24 24" style="vertical-align:middle;display:block" aria-hidden="true"><path d="M17 3H7c-1.1 0-2 .9-2 2v16l7-3 7 3V5c0-1.1-.9-2-2-2z" fill="var(--blue-primary)"/></svg>`
+        : `<svg width="18" height="18" viewBox="0 0 24 24" style="vertical-align:middle;display:block" aria-hidden="true"><path d="M17 3H7c-1.1 0-2 .9-2 2v16l7-3 7 3V5c0-1.1-.9-2-2-2z" fill="none" stroke="var(--blue-text)" stroke-width="2"/></svg>`;
+    }
+
     // --- 검색 결과 카드 / 관심 목록 카드 / 상세보기 모달 ---
     function renderSearchCard(item, i) {
       const bookmarked = isBookmarked(item);
@@ -310,7 +317,7 @@ const features = Array.from(document.querySelectorAll('.feature'));
           <div class="title">${escapeSearchHtml(item.title || '(제목 없음)')}${statusBadge}</div>
           <div class="meta">${metaParts.join(' · ')}</div>
           <div style="margin-top:8px;display:flex;gap:8px;flex-wrap:wrap;align-items:center">
-            <button type="button" class="small-btn" style="padding:6px 10px;font-size:16px;line-height:1" data-action="toggle-save" data-idx="${i}" aria-label="${bookmarked ? '관심 목록에서 제거' : '관심 목록에 저장'}" title="${bookmarked ? '관심 목록에서 제거' : '관심 목록에 저장'}">${bookmarked ? '★' : '☆'}</button>
+            <button type="button" class="small-btn" style="padding:6px 8px;line-height:1" data-action="toggle-save" data-idx="${i}" aria-label="${bookmarked ? '관심 목록에서 제거' : '관심 목록에 저장'}" title="${bookmarked ? '관심 목록에서 제거' : '관심 목록에 저장'}">${bookmarkIcon(bookmarked)}</button>
             ${item.link ? `<a href="${item.link}" target="_blank" rel="noopener" class="small-btn" style="padding:6px 12px;font-size:12px;text-decoration:none;display:inline-block" onclick="event.stopPropagation()">원문 보기 →</a>` : ''}
           </div>
         </div>`;
@@ -341,7 +348,7 @@ const features = Array.from(document.querySelectorAll('.feature'));
             제안이유·주요내용 원문은 열린국회정보 「국회의원 발의법률안」 API에서 별도 제공되지 않아 이 화면에서는 요약할 수 없습니다. 아래 [국회 원문 보기]에서 전체 내용을 확인하실 수 있습니다.
           </div>
           <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:6px">
-            <button type="button" class="small-btn" style="padding:8px 14px;font-size:18px;line-height:1;background:var(--blue-primary);color:#fff;border-color:var(--blue-primary)" data-action="toggle-save-detail" aria-label="${bookmarked ? '관심 목록에서 제거' : '관심 목록에 저장'}" title="${bookmarked ? '관심 목록에서 제거' : '관심 목록에 저장'}">${bookmarked ? '★' : '☆'}</button>
+            <button type="button" class="small-btn" style="padding:10px 12px;line-height:1;background:#fff;border-color:var(--blue-primary)" data-action="toggle-save-detail" aria-label="${bookmarked ? '관심 목록에서 제거' : '관심 목록에 저장'}" title="${bookmarked ? '관심 목록에서 제거' : '관심 목록에 저장'}">${bookmarkIcon(bookmarked)}</button>
             ${item.link ? `<a href="${item.link}" target="_blank" rel="noopener" class="small-btn" style="text-decoration:none;display:inline-block">국회 원문 보기 →</a>` : ''}
           </div>
         </div>`;
@@ -483,7 +490,7 @@ const features = Array.from(document.querySelectorAll('.feature'));
         const item = lastSearchItems[idx];
         toggleBookmark(item);
         const nowSaved = isBookmarked(item);
-        saveBtn.textContent = nowSaved ? '★' : '☆';
+        saveBtn.innerHTML = bookmarkIcon(nowSaved);
         saveBtn.title = nowSaved ? '관심 목록에서 제거' : '관심 목록에 저장';
         saveBtn.setAttribute('aria-label', saveBtn.title);
         renderBookmarkPanel();
@@ -494,7 +501,7 @@ const features = Array.from(document.querySelectorAll('.feature'));
         if (!currentDetailItem) return;
         toggleBookmark(currentDetailItem);
         const nowSaved = isBookmarked(currentDetailItem);
-        saveDetailBtn.textContent = nowSaved ? '★' : '☆';
+        saveDetailBtn.innerHTML = bookmarkIcon(nowSaved);
         saveDetailBtn.title = nowSaved ? '관심 목록에서 제거' : '관심 목록에 저장';
         saveDetailBtn.setAttribute('aria-label', saveDetailBtn.title);
         renderBookmarkPanel();
@@ -645,12 +652,10 @@ const features = Array.from(document.querySelectorAll('.feature'));
 
     function glossaryRow(g) {
       const shortDesc = truncateGlossaryText(g.desc, 55);
-      const needsMore = g.desc && g.desc.length > 55;
       return `
-        <div class="post" style="margin-top:10px">
+        <div class="post" style="margin-top:10px;cursor:pointer" data-action="glossary-detail" data-term="${escapeGlossaryHtml(g.term)}">
           <div class="title">${escapeGlossaryHtml(g.term)}</div>
           <div class="meta" style="color:#475569;margin-top:6px;line-height:1.6">${escapeGlossaryHtml(shortDesc)}</div>
-          ${needsMore ? `<button type="button" class="small-btn" style="margin-top:8px;padding:6px 12px;font-size:12px" data-action="glossary-detail" data-term="${escapeGlossaryHtml(g.term)}">자세히 보기</button>` : ''}
         </div>`;
     }
 
@@ -704,7 +709,7 @@ const features = Array.from(document.querySelectorAll('.feature'));
     }
 
         document.getElementById('subscribeBtn').addEventListener('click', () => {
-      openModal('월정액 요금제 안내', '무료 계정으로도 정책 검색을 자유롭게 이용하실 수 있습니다. 결제 시 심층 정책 분석과 해외 정책 열람까지 더 넓은 범위의 데이터가 해금됩니다.', `
+      openModal('월정액 요금제 안내', '', `
         <div style="display:flex;flex-direction:column;gap:12px">
           <div style="padding:14px;border-radius:14px;border:1px solid var(--card-border);background:#f8fafc">
             <div style="display:flex;justify-content:space-between;align-items:center">
@@ -726,18 +731,6 @@ const features = Array.from(document.querySelectorAll('.feature'));
               · Free의 모든 검색 기능 포함<br>
               · <strong>열람 가능한 정책 자료 및 분석 범위 대폭 확대</strong><br>
               · 법안별 핵심 쟁점 심층 분석 리포트 & 맞춤 알림
-            </div>
-          </div>
-
-          <div style="padding:14px;border-radius:14px;border:1px solid #c084fc;background:#faf5ff">
-            <div style="display:flex;justify-content:space-between;align-items:center">
-              <strong style="color:#7e22ce;font-size:15px">Pro (글로벌 정책 & 전문가)</strong>
-              <span style="font-size:13px;color:#7e22ce;font-weight:800">월 19,000원</span>
-            </div>
-            <div style="margin-top:6px;color:#581c87;font-size:13px;line-height:1.5">
-              · Plus의 모든 심층 분석 기능 포함<br>
-              · <strong>해외 주요국 정책 및 입법 동향 자료 열람 기능 해금</strong><br>
-              · 다국가 정책 비교 데이터 제공 & API 연동 지원
             </div>
           </div>
         </div>

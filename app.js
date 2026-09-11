@@ -103,9 +103,10 @@ const features = Array.from(document.querySelectorAll('.feature'));
       renderTrendsToSide().then(() => { btn.textContent = '새로고침'; });
     });
 
-    // --- 최신 소식 하단: 월간 법안 발의 추이 그래프 ---
+    // Hero lede area: monthly bill proposal trend chart (with single-month filter)
     const billTrendChartEl = document.getElementById('billTrendChart');
     const billTrendSelectEl = document.getElementById('billTrendMonthSelect');
+    const BILL_TREND_ALL = 'all';
     let billTrendMonths = [];
 
     function formatMonthLabel(monthKey) {
@@ -114,18 +115,13 @@ const features = Array.from(document.querySelectorAll('.feature'));
       return `${parseInt(m, 10)}월`;
     }
 
-    function renderBillTrendChart(selectedMonth) {
-      if (!billTrendChartEl) return;
-      if (!billTrendMonths.length) {
-        billTrendChartEl.innerHTML = '<div style="color:var(--muted);font-size:13px;padding:8px 0">월간 발의 추이를 불러오지 못했습니다.</div>';
-        return;
-      }
+    function renderBillTrendAll() {
       const maxCount = Math.max(1, ...billTrendMonths.map(m => m.count));
+      billTrendChartEl.classList.remove('single-mode');
       billTrendChartEl.innerHTML = billTrendMonths.map(m => {
-        const isActive = m.month === selectedMonth;
         const heightPct = Math.max(4, Math.round((m.count / maxCount) * 100));
         return `
-          <div class="bill-trend-bar-col${isActive ? ' active' : ''}" title="${m.month} · ${m.count}건">
+          <div class="bill-trend-bar-col" title="${m.month} · ${m.count}건">
             <div class="bill-trend-bar-value">${m.count}</div>
             <div class="bill-trend-bar" style="height:${heightPct}%"></div>
             <div class="bill-trend-bar-label">${formatMonthLabel(m.month)}</div>
@@ -133,11 +129,41 @@ const features = Array.from(document.querySelectorAll('.feature'));
       }).join('');
     }
 
-    function populateBillTrendSelect(selectedMonth) {
+    function renderBillTrendSingle(monthKey) {
+      const found = billTrendMonths.find(m => m.month === monthKey);
+      billTrendChartEl.classList.add('single-mode');
+      if (!found) {
+        billTrendChartEl.innerHTML = '<div style="color:var(--muted);font-size:13px">해당 월의 데이터가 없습니다.</div>';
+        return;
+      }
+      billTrendChartEl.innerHTML = `
+        <div class="bill-trend-single">
+          <div><span class="bill-trend-single-value">${found.count}</span><span class="bill-trend-single-unit">건</span></div>
+          <div class="bill-trend-single-label">${found.month} (${formatMonthLabel(found.month)}) 법안 발의 건수</div>
+        </div>`;
+    }
+
+    function renderBillTrendChart(selectedValue) {
+      if (!billTrendChartEl) return;
+      if (!billTrendMonths.length) {
+        billTrendChartEl.classList.remove('single-mode');
+        billTrendChartEl.innerHTML = '<div style="color:var(--muted);font-size:13px;padding:8px 0">월간 발의 추이를 불러오지 못했습니다.</div>';
+        return;
+      }
+      if (!selectedValue || selectedValue === BILL_TREND_ALL) {
+        renderBillTrendAll();
+      } else {
+        renderBillTrendSingle(selectedValue);
+      }
+    }
+
+    function populateBillTrendSelect(selectedValue) {
       if (!billTrendSelectEl) return;
-      billTrendSelectEl.innerHTML = billTrendMonths.map(m =>
-        `<option value="${m.month}"${m.month === selectedMonth ? ' selected' : ''}>${m.month} (${m.count}건)</option>`
+      const allOption = `<option value="${BILL_TREND_ALL}"${selectedValue === BILL_TREND_ALL ? ' selected' : ''}>전체 12개월 보기</option>`;
+      const monthOptions = billTrendMonths.map(m =>
+        `<option value="${m.month}"${m.month === selectedValue ? ' selected' : ''}>${m.month} (${m.count}건)</option>`
       ).join('');
+      billTrendSelectEl.innerHTML = allOption + monthOptions;
     }
 
     async function initBillTrend() {
@@ -155,9 +181,8 @@ const features = Array.from(document.querySelectorAll('.feature'));
         renderBillTrendChart(null);
         return;
       }
-      const latestMonth = billTrendMonths[billTrendMonths.length - 1].month;
-      populateBillTrendSelect(latestMonth);
-      renderBillTrendChart(latestMonth);
+      populateBillTrendSelect(BILL_TREND_ALL);
+      renderBillTrendChart(BILL_TREND_ALL);
     }
 
     if (billTrendSelectEl) {

@@ -54,7 +54,12 @@ const features = Array.from(document.querySelectorAll('.feature'));
         return items.map(item => ({
           title: item.title || '(제목 없음)',
           time: formatRelativeDate(item.pubDate),
-          link: item.link || ''
+          link: item.link || '',
+          billNo: item.billNo || '',
+          author: item.author || '',
+          pubDate: item.pubDate || '',
+          committee: item.committee || '',
+          status: item.status || ''
         }));
       } catch (err) {
         return [];
@@ -344,8 +349,8 @@ const features = Array.from(document.querySelectorAll('.feature'));
           <div><strong style="color:var(--blue-text)">제안자</strong> · ${escapeSearchHtml(item.author || '-')}</div>
           <div><strong style="color:var(--blue-text)">소관위원회</strong> · ${escapeSearchHtml(item.committee || '-')}</div>
           <div><strong style="color:var(--blue-text)">처리상태</strong> · ${escapeSearchHtml(item.status || '진행중')}</div>
-          <div style="padding:12px;border-radius:10px;background:#f8fafc;color:var(--muted);font-size:13px;line-height:1.6">
-            제안이유·주요내용 원문은 열린국회정보 「국회의원 발의법률안」 API에서 별도 제공되지 않아 이 화면에서는 요약할 수 없습니다. 아래 [국회 원문 보기]에서 전체 내용을 확인하실 수 있습니다.
+          <div id="billSummaryBox" style="padding:12px;border-radius:10px;background:#f8fafc;color:var(--muted);font-size:13px;line-height:1.6">
+            제안이유를 불러오는 중…
           </div>
           <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:6px">
             <button type="button" class="small-btn" style="padding:10px 12px;line-height:1;background:#fff;border-color:var(--blue-primary)" data-action="toggle-save-detail" aria-label="${bookmarked ? '관심 목록에서 제거' : '관심 목록에 저장'}" title="${bookmarked ? '관심 목록에서 제거' : '관심 목록에 저장'}">${bookmarkIcon(bookmarked)}</button>
@@ -353,6 +358,37 @@ const features = Array.from(document.querySelectorAll('.feature'));
           </div>
         </div>`;
       openModal(item.title || '(제목 없음)', '법안 상세 정보', body, { hideAction: true });
+      loadBillSummary(item);
+    }
+
+    // 열린국회정보 「법률안 제안이유 및 주요내용」 API로 요약을 불러와 모달에 채운다.
+    async function loadBillSummary(item) {
+      const box = document.getElementById('billSummaryBox');
+      if (!box) return;
+      if (!item.billNo) {
+        box.textContent = '의안번호가 없어 제안이유를 불러올 수 없습니다. 아래 [국회 원문 보기]에서 전체 내용을 확인하실 수 있습니다.';
+        return;
+      }
+      try {
+        const res = await fetch(`/api/bill-summary?billNo=${encodeURIComponent(item.billNo)}`);
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const data = await res.json();
+        if (!data.summary) {
+          box.textContent = data.notice || '제안이유 정보가 아직 제공되지 않았습니다. [국회 원문 보기]에서 확인하실 수 있습니다.';
+          return;
+        }
+        const fullText = escapeSearchHtml(data.full || '');
+        box.innerHTML = `
+          <div style="font-weight:800;color:var(--blue-text);margin-bottom:6px">제안이유 요약</div>
+          <div style="color:#334155">${escapeSearchHtml(data.summary)}</div>
+          ${data.full && data.full.length > data.summary.length ? `
+            <details style="margin-top:8px">
+              <summary style="cursor:pointer;color:var(--blue-primary);font-weight:700">전체 제안이유 보기</summary>
+              <div style="margin-top:8px;white-space:pre-wrap;color:#334155">${fullText}</div>
+            </details>` : ''}`;
+      } catch (err) {
+        box.textContent = '제안이유를 불러오지 못했습니다. 잠시 후 다시 시도하거나 [국회 원문 보기]에서 확인하실 수 있습니다.';
+      }
     }
 
     // 관심 목록은 모달이 아닌 정책용어사전 옆(#bookmarkPanelList)에 상시 노출된다
@@ -708,169 +744,3 @@ const features = Array.from(document.querySelectorAll('.feature'));
       }
     }
 
-        document.getElementById('subscribeBtn').addEventListener('click', () => {
-      openModal('월정액 요금제 안내', '', `
-        <div style="display:flex;flex-direction:column;gap:12px">
-          <div style="padding:14px;border-radius:14px;border:1px solid var(--card-border);background:#f8fafc">
-            <div style="display:flex;justify-content:space-between;align-items:center">
-              <strong style="color:var(--blue-text);font-size:15px">Free (기본 무료)</strong>
-              <span style="font-size:12px;color:var(--muted);font-weight:700">0원</span>
-            </div>
-            <div style="margin-top:6px;color:#475569;font-size:13px;line-height:1.5">
-              · 국회 발의 법률안 검색 기능 그대로 이용 가능<br>
-              · 실시간 의안 동향 파악 및 정책 타자 체험
-            </div>
-          </div>
-
-          <div style="padding:14px;border-radius:14px;border:2px solid var(--blue-primary);background:#f0f6ff">
-            <div style="display:flex;justify-content:space-between;align-items:center">
-              <strong style="color:var(--blue-primary);font-size:15px">Plus (정책 심층 분석)</strong>
-              <span style="font-size:13px;color:var(--blue-primary);font-weight:800">월 4,900원</span>
-            </div>
-            <div style="margin-top:6px;color:#1e3a8a;font-size:13px;line-height:1.5">
-              · Free의 모든 검색 기능 포함<br>
-              · <strong>열람 가능한 정책 자료 및 분석 범위 대폭 확대</strong><br>
-              · 법안별 핵심 쟁점 심층 분석 리포트 & 맞춤 알림
-            </div>
-          </div>
-        </div>
-      `);
-    });
-
-    // --- 정책 궤도형 타자 체험 (주제 선택 가능) ---
-    const typingTopics = {
-      yellowEnvelope: {
-        label: '노란봉투법',
-        title: '노란봉투법, 짧게 나눠 입력해보세요',
-        lede: '긴 설명을 3개의 짧은 문장으로 나눴습니다. 각 문장을 입력하고 확인하면 다음 문장으로 빠르게 넘어갑니다.',
-        sentences: [
-          '노란봉투법은 노동조합의 쟁의행위로 발생한 손해배상 청구를 제한하는 법안이다.',
-          '하청 노동자의 교섭권을 넓히는 내용도 주요하게 담고 있다.',
-          '노동자의 권리와 기업의 책임 범위를 함께 생각해볼 수 있다.'
-        ]
-      },
-      supplementaryInvestigation: {
-        label: '보완수사권',
-        title: '보완수사권, 짧게 나눠 입력해보세요',
-        lede: '검찰과 경찰의 수사 권한 조정을 둘러싼 정책 설명을 3개의 짧은 문장으로 나눴습니다.',
-        sentences: [
-          '보완수사권은 경찰이 송치한 사건을 검찰이 다시 수사할 수 있는 권한이다.',
-          '수사 절차의 견제와 균형을 위해 필요하다는 주장이 있다.',
-          '검찰과 경찰 간 권한 배분을 둘러싼 논쟁이 계속되고 있다.'
-        ]
-      }
-    };
-    let currentTopicKey = null;
-    let typingSentences = [];
-    let typingRoundIndex = 0, typingStartedAt = null, typingTotalChars = 0, typingTotalSeconds = 0;
-    const typingAnswers = [];
-    const typingAchievedA = {};
-    const typingTargetEl = document.getElementById('typingTarget');
-    const typingInput = document.getElementById('typingInput');
-    const typingRound = document.getElementById('typingRound');
-    const typingTimer = document.getElementById('typingTimer');
-    const typingResult = document.getElementById('typingResult');
-    const orbitDots = [...document.querySelectorAll('.typing-orbit-dot')];
-    function escapeTypingHtml(value) { return value.replace(/[&<>"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch])); }
-    function renderTarget(sentence) {
-      typingTargetEl.style.color = '';
-      typingTargetEl.style.textAlign = '';
-      typingTargetEl.style.fontFamily = '';
-      typingTargetEl.innerHTML = [...sentence].map((ch, i) => `<span class="char" data-idx="${i}">${escapeTypingHtml(ch)}</span>`).join('');
-    }
-    function paintChars() {
-      if (!currentTopicKey || !typingSentences[typingRoundIndex]) return;
-      const target = typingSentences[typingRoundIndex];
-      const value = typingInput.value;
-      const spans = typingTargetEl.querySelectorAll('.char');
-      spans.forEach((span, i) => {
-        span.classList.remove('correct', 'wrong', 'current');
-        if (i < value.length) span.classList.add(value[i] === target[i] ? 'correct' : 'wrong');
-        else if (i === value.length) span.classList.add('current');
-      });
-    }
-    function updateTypingFast() {
-      if (!currentTopicKey) return;
-      if (!typingStartedAt && typingInput.value) typingStartedAt = performance.now();
-      const elapsed = typingStartedAt ? (performance.now() - typingStartedAt) / 1000 : 0;
-      typingTimer.textContent = `시간 ${elapsed.toFixed(1)}초`;
-      paintChars();
-    }
-    function refreshOrbit() {
-      orbitDots.forEach((dot, i) => {
-        if (!currentTopicKey) {
-          dot.classList.remove('active', 'done');
-        } else {
-          dot.classList.toggle('active', i === typingRoundIndex);
-          dot.classList.toggle('done', i < typingRoundIndex);
-        }
-      });
-    }
-    function finishTyping() {
-      if (!currentTopicKey || !typingSentences[typingRoundIndex]) return;
-      const target = typingSentences[typingRoundIndex], value = typingInput.value;
-      const elapsed = typingStartedAt ? (performance.now() - typingStartedAt) / 1000 : 0;
-      typingAnswers.push({ target, value, elapsed });
-      typingTotalChars += value.length; typingTotalSeconds += elapsed; typingRoundIndex++;
-      if (typingRoundIndex < typingSentences.length) {
-        typingInput.value = ''; typingStartedAt = null;
-        typingRound.textContent = `${typingRoundIndex + 1} / ${typingSentences.length}`;
-        renderTarget(typingSentences[typingRoundIndex]);
-        typingResult.classList.remove('show'); refreshOrbit(); updateTypingFast(); typingInput.focus();
-      } else {
-        const average = typingTotalSeconds ? Math.round(typingTotalChars / typingTotalSeconds * 60) : 0;
-        const wrongChars = typingAnswers.reduce((sum, item) => {
-          let wrong = Math.abs(item.value.length - item.target.length);
-          for (let j = 0; j < Math.min(item.value.length, item.target.length); j++) if (item.value[j] !== item.target[j]) wrong++;
-          return sum + wrong;
-        }, 0);
-        const isFail = average < 50;
-        const grade = isFail ? null : (wrongChars <= 3 && average >= 200 ? 'A' : (wrongChars <= 7 && average >= 150 ? 'B' : 'C'));
-        const gradeMessage = isFail
-          ? '타자 속도가 너무 느려요. 다시 도전해보세요!'
-          : (grade === 'A' ? '정확하고 빠른 정책 입력' : (grade === 'B' ? '안정적인 정책 입력' : '조금 더 연습해보세요'));
-        typingInput.disabled = true; typingRound.textContent = '완료'; refreshOrbit();
-        typingResult.classList.add('show');
-        typingResult.classList.toggle('fail', isFail);
-        const scoreHtml = isFail
-          ? `<div class="typing-score fail"><strong>실패</strong><span>${gradeMessage}</span></div>`
-          : `<div class="typing-score"><strong>${grade}</strong><span>${gradeMessage}</span></div>`;
-        typingResult.innerHTML = `<strong>정책 타자 체험 완료!</strong>${scoreHtml}<div style="font-size:14px;line-height:1.7;color:var(--blue-text);margin-top:8px">총 입력 글자 수 <strong>${typingTotalChars}자</strong> · 틀린 타자 수 <strong>${wrongChars}자</strong><br>총 소요 시간 <strong>${typingTotalSeconds.toFixed(1)}초</strong> · 평균 타자 <strong>${average}자/분</strong></div>`;
-        document.getElementById('typingReset').style.display = 'inline-block';
-        if (grade === 'A' && currentTopicKey) {
-          typingAchievedA[currentTopicKey] = true;
-          const achievedBtn = document.querySelector(`.typing-topic-btn[data-topic="${currentTopicKey}"]`);
-          if (achievedBtn) achievedBtn.classList.add('achieved-a');
-        }
-      }
-    }
-    function selectTopic(topicKey) {
-      currentTopicKey = topicKey;
-      const topic = typingTopics[topicKey];
-      typingSentences = topic.sentences;
-      typingRoundIndex = 0; typingStartedAt = null; typingTotalChars = 0; typingTotalSeconds = 0;
-      typingAnswers.length = 0;
-      document.getElementById('typing-title').textContent = topic.label;
-      document.getElementById('typingPlayArea').classList.add('active');
-      document.querySelectorAll('.typing-topic-btn').forEach(btn => {
-        const isActive = btn.dataset.topic === topicKey;
-        btn.classList.toggle('active', isActive);
-        btn.setAttribute('aria-pressed', isActive ? 'true' : 'false');
-      });
-      typingInput.value = ''; typingInput.disabled = false;
-      typingInput.placeholder = '정책 문장을 입력하고 Enter를 누르세요.';
-      document.getElementById('typingReset').style.display = 'none';
-      typingRound.textContent = `1 / ${typingSentences.length}`;
-      typingTimer.textContent = '시간 0.0초';
-      renderTarget(typingSentences[typingRoundIndex]);
-      typingResult.classList.remove('show'); typingResult.innerHTML = '';
-      refreshOrbit(); updateTypingFast(); typingInput.focus();
-    }
-    document.getElementById('topicYellowEnvelope').addEventListener('click', () => selectTopic('yellowEnvelope'));
-    document.getElementById('topicSupplementaryInvestigation').addEventListener('click', () => selectTopic('supplementaryInvestigation'));
-
-    typingInput.addEventListener('input', updateTypingFast);
-    typingInput.addEventListener('keydown', (event) => { if (event.key === 'Enter') { event.preventDefault(); finishTyping(); } });
-    document.getElementById('typingReset').addEventListener('click', () => {
-      if (currentTopicKey) selectTopic(currentTopicKey);
-    });

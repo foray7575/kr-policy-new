@@ -14,3 +14,4 @@
     .bill-row a { color:var(--blue-text); font-weight:700; text-decoration:none; }
     .bill-row .meta { color:var(--muted); font-size:12px; margin-top:4px; }
     input.num-input { width:110px; padding:10px 12px; border-radius:10px; border:1px solid var(--card-border); font-size:14px; }
+    .bill-trend-range { display:flex; gap:8px; align-items:center; flex-wrap:wrap; }

@@ -108,82 +108,82 @@ const features = Array.from(document.querySelectorAll('.feature'));
       renderTrendsToSide().then(() => { btn.textContent = '새로고침'; });
     });
 
-    // Hero lede area: monthly bill proposal trend chart (with cumulative up-to-month filter)
+    // Hero lede area: 월별 법안 발의 추이 (시작 월 ~ 종료 월 선택)
     const billTrendChartEl = document.getElementById('billTrendChart');
-    const billTrendSelectEl = document.getElementById('billTrendMonthSelect');
-    const BILL_TREND_ALL = 'all';
-    let billTrendMonths = [];
+    const billTrendFromEl = document.getElementById('billTrendFrom');
+    const billTrendToEl = document.getElementById('billTrendTo');
+    let billTrendRequestSeq = 0;
 
-    function formatMonthLabel(monthKey) {
-      if (!monthKey || monthKey.indexOf('-') === -1) return monthKey;
-      const [, m] = monthKey.split('-');
-      return `${parseInt(m, 10)}월`;
+    function pad2(n) { return String(n).padStart(2, '0'); }
+
+    // 선택 가능한 월: 2024-01 ~ 현재 월
+    function listBillTrendMonths() {
+      const now = new Date();
+      const out = [];
+      let y = 2024, m = 1;
+      while (y < now.getFullYear() || (y === now.getFullYear() && m <= now.getMonth() + 1)) {
+        out.push(`${y}-${pad2(m)}`);
+        m++;
+        if (m > 12) { m = 1; y++; }
+      }
+      return out;
     }
 
-    function renderBillTrendBars(monthsList, globalMax) {
-      const maxCount = globalMax || Math.max(1, ...monthsList.map(m => m.count));
-      billTrendChartEl.innerHTML = monthsList.map(m => {
+    function populateBillTrendRange(fromVal, toVal) {
+      const opts = listBillTrendMonths()
+        .map(key => `<option value="${key}">${key.slice(0, 4)}년 ${Number(key.slice(5))}월</option>`)
+        .join('');
+      billTrendFromEl.innerHTML = opts;
+      billTrendToEl.innerHTML = opts;
+      billTrendFromEl.value = fromVal;
+      billTrendToEl.value = toVal;
+    }
+
+    function renderBillTrendBars(months) {
+      const maxCount = Math.max(1, ...months.map(m => m.count));
+      billTrendChartEl.innerHTML = months.map(m => {
         const heightPct = Math.max(4, Math.round((m.count / maxCount) * 100));
+        const label = `${m.month.slice(2, 4)}.${m.month.slice(5, 7)}`;
         return `
           <div class="bill-trend-bar-col" title="${m.month} · ${m.count}건">
             <div class="bill-trend-bar-value">${m.count}</div>
             <div class="bill-trend-bar" style="height:${heightPct}%"></div>
-            <div class="bill-trend-bar-label">${formatMonthLabel(m.month)}</div>
+            <div class="bill-trend-bar-label">${label}</div>
           </div>`;
       }).join('');
     }
 
-    function renderBillTrendChart(selectedValue) {
-      if (!billTrendChartEl) return;
-      if (!billTrendMonths.length) {
-        billTrendChartEl.innerHTML = '<div style="color:var(--muted);font-size:13px;padding:8px 0">월간 발의 추이를 불러오지 못했습니다.</div>';
-        return;
-      }
-      const globalMax = Math.max(1, ...billTrendMonths.map(m => m.count));
-      if (!selectedValue || selectedValue === BILL_TREND_ALL) {
-        renderBillTrendBars(billTrendMonths, globalMax);
-        return;
-      }
-      // 선택한 월까지 누적(해당 월 포함, 그 이전 월들)만 표시
-      const upToSelected = billTrendMonths.filter(m => m.month <= selectedValue);
-      renderBillTrendBars(upToSelected.length ? upToSelected : billTrendMonths, globalMax);
-    }
-
-    function populateBillTrendSelect(selectedValue) {
-      if (!billTrendSelectEl) return;
-      const allOption = `<option value="${BILL_TREND_ALL}"${selectedValue === BILL_TREND_ALL ? ' selected' : ''}>전체 12개월 보기</option>`;
-      const monthOptions = billTrendMonths.map(m =>
-        `<option value="${m.month}"${m.month === selectedValue ? ' selected' : ''}>${m.month}까지</option>`
-      ).join('');
-      billTrendSelectEl.innerHTML = allOption + monthOptions;
-    }
-
-    async function initBillTrend() {
-      if (!billTrendChartEl) return;
+    async function loadBillTrend() {
+      if (!billTrendChartEl || !billTrendFromEl || !billTrendToEl) return;
+      const from = billTrendFromEl.value;
+      let to = billTrendToEl.value;
+      if (from > to) { to = from; billTrendToEl.value = to; }
+      const seq = ++billTrendRequestSeq;
       billTrendChartEl.innerHTML = '<div style="color:var(--muted);font-size:13px;padding:8px 0">월간 발의 추이를 불러오는 중...</div>';
       try {
-        const res = await fetch('/api/bill-trend');
+        const res = await fetch(`/api/bill-trend?from=${from}&to=${to}`);
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         const data = await res.json();
-        billTrendMonths = Array.isArray(data.months) ? data.months : [];
+        if (seq !== billTrendRequestSeq) return;
+        const months = Array.isArray(data.months) ? data.months : [];
+        if (!months.length) throw new Error('empty');
+        renderBillTrendBars(months);
       } catch (err) {
-        billTrendMonths = [];
+        if (seq !== billTrendRequestSeq) return;
+        billTrendChartEl.innerHTML = '<div style="color:var(--muted);font-size:13px;padding:8px 0">월간 발의 추이를 불러오지 못했습니다.</div>';
       }
-      if (!billTrendMonths.length) {
-        renderBillTrendChart(null);
-        return;
-      }
-      populateBillTrendSelect(BILL_TREND_ALL);
-      renderBillTrendChart(BILL_TREND_ALL);
     }
 
-    if (billTrendSelectEl) {
-      billTrendSelectEl.addEventListener('change', () => {
-        renderBillTrendChart(billTrendSelectEl.value);
-      });
+    if (billTrendFromEl && billTrendToEl) {
+      const now = new Date();
+      const toVal = `${now.getFullYear()}-${pad2(now.getMonth() + 1)}`;
+      const fromDate = new Date(now.getFullYear(), now.getMonth() - 11, 1);
+      const fromVal = `${fromDate.getFullYear()}-${pad2(fromDate.getMonth() + 1)}`;
+      populateBillTrendRange(fromVal, toVal);
+      billTrendFromEl.addEventListener('change', loadBillTrend);
+      billTrendToEl.addEventListener('change', loadBillTrend);
+      loadBillTrend();
     }
-
-    initBillTrend();
 
     // --- 검색: 국회도서관 Open API 연동 (언론 키워드 사전 + 상세보기 + 관심 목록) ---
     function escapeSearchHtml(value) {

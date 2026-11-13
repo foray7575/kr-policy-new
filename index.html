@@ -6,6 +6,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>KR Policy — 정책과 정치인을 쉽게 찾는 시작점</title>
   <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="features.css">
 </head>
 
 <body>
@@ -82,6 +83,32 @@
       </div>
     </section>
 
+    <section class="side-card category-section" aria-labelledby="cat-title" style="margin-bottom:24px">
+      <h3 id="cat-title">📚 분야별 정책 찾기</h3>
+      <p style="margin:0 0 14px;color:var(--muted);font-size:14px">법률안 제목의 핵심 키워드로 교육·사회·과학·외교·문화 분야를 나눠 보여줍니다.</p>
+      <div class="cat-tabs" id="catTabs" role="group" aria-label="분야 선택"></div>
+      <div class="keyword-chips" id="catKeywords"></div>
+      <div id="catList" aria-live="polite"></div>
+      <div class="note-box">
+        데이터: 열린국회정보 「국회의원 발의법률안」 최신 <span id="catSnapCount">-</span>건 기준 자동 분류입니다. 제목에 분류 키워드가 없는 법률안(<span id="catUnclassCount">-</span>건)은 분류되지 않으며, 실제 정책 분야와 다를 수 있습니다.
+      </div>
+    </section>
+
+    <section class="side-card benefit-section" aria-labelledby="benefit-title" style="margin-bottom:24px">
+      <h3 id="benefit-title">🎁 나에게 맞는 국가 혜택 확인</h3>
+      <p style="margin:0 0 14px;color:var(--muted);font-size:14px">나이와 해당 상황을 고르면 받을 수 있을 가능성이 있는 혜택을 보여줍니다.</p>
+      <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin-bottom:14px">
+        <label style="font-size:14px;font-weight:700;color:var(--blue-text)">나이
+          <input id="benefitAge" class="num-input" type="number" min="0" max="120" placeholder="예: 25" style="margin-left:8px" />
+        </label>
+      </div>
+      <div class="benefit-checks" id="benefitChecks"></div>
+      <div id="benefitResult" style="margin-top:6px"></div>
+      <div class="note-box">
+        ※ 혜택 목록은 샘플 데이터입니다. 최종 자격은 복지로(bokjiro.go.kr)·정부24(gov.kr)에서 확인해 주세요. 지역(지자체) 혜택은 다음 단계에서 추가합니다.
+      </div>
+    </section>
+
     <section class="hero glossary-hero" aria-label="정책 용어사전과 관심 목록">
       <div class="hero-card">
         <div class="hero-news glossary-panel" aria-label="정책 용어사전">
@@ -105,10 +132,8 @@
     <section class="typing-slide" aria-labelledby="typing-title">
       <div class="typing-kicker">정책 학습 타이핑 게임</div>
       <h2 id="typing-title">학습을 원하시는 정책을 선택해주세요</h2>
-      <div class="typing-topic-picker" role="radiogroup" aria-label="타자 게임 주제 선택">
-        <button type="button" class="typing-topic-btn" id="topicYellowEnvelope" data-topic="yellowEnvelope" aria-pressed="false">노란봉투법</button>
-        <button type="button" class="typing-topic-btn" id="topicSupplementaryInvestigation" data-topic="supplementaryInvestigation" aria-pressed="false">보완수사권</button>
-      </div>
+      <p style="margin:0 0 4px;color:var(--muted);font-size:13px">출처: 나비스(NABIS) 정책용어사전 정의문 원문 · 주제별 3개 용어</p>
+      <div class="typing-topic-picker" id="typingTopicPicker" role="group" aria-label="타자 게임 주제 선택"></div>
       <div class="typing-play-area" id="typingPlayArea">
         <div class="typing-orbit" aria-label="문장 진행 상태"><span class="typing-orbit-dot"></span><span class="typing-orbit-dot"></span><span class="typing-orbit-dot"></span></div>
         <div class="typing-status"><span class="typing-stat" id="typingRound">대기 중</span><span class="typing-stat" id="typingTimer">시간 0.0초</span></div>

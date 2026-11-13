@@ -1,32 +1,65 @@
 // Vercel Serverless Function: 열린국회정보(open.assembly.go.kr) 국회의원 발의법률안 API를 이용한
-// 월간 법안 발의 추이 집계 프록시
+// 월별 법안 발의 건수 집계 프록시
 //
-// 프론트엔드(app.js)의 "최신 소식" 섹션 하단 그래프에서 /api/bill-trend 로 호출합니다.
-// 최근 발의된 법률안을 최신순으로 페이지 단위 조회하며, PROPOSE_DT(발의일자) 기준으로
-// 최근 12개월 범위를 벗어나는 시점까지 페이지네이션하여 월별 건수를 집계해 반환합니다.
+// 사용법: /api/bill-trend?from=2026-01&to=2026-09
+//  - from: 시작 월(YYYY-MM), to: 종료 월(YYYY-MM). 둘 다 생략하면 최근 12개월.
+//  - 범위는 최대 36개월. 시작 월이 종료 월보다 늦으면 두 값을 바꿔 적용합니다.
 //
-// 참고: nanet-search.js 와 동일한 엔드포인트/인증키(NANET_API_KEY)를 사용합니다.
+// 데이터는 발의일 최신순으로 제공되므로, 조회 범위의 시작 월보다 오래된 행이 나오면 페이지 조회를 멈춥니다.
+// 같은 인증키(NANET_API_KEY)를 사용합니다.
 
 const BILL_ENDPOINT = 'https://open.assembly.go.kr/portal/openapi/nzmimeepazxkubdpn';
 const CURRENT_AGE = '22';
-const PAGE_SIZE = 300;
-const MAX_PAGES = 15; // 최대 4,500건까지 조회 (충분히 12개월 범위를 커버)
-const MONTH_COUNT = 12;
+const PAGE_SIZE = 1000;      // 열린국회정보 API 최대 요청 건수
+const BATCH_SIZE = 4;        // 동시에 요청할 페이지 수
+const MAX_PAGES = 40;        // 안전장치 (최대 40,000건)
+const MAX_MONTHS = 36;
+const DEFAULT_MONTHS = 12;
 
-function monthKey(dateStr) {
-  if (!dateStr || dateStr.length < 7) return null;
-  return dateStr.slice(0, 7); // YYYY-MM
+function pad(n) { return String(n).padStart(2, '0'); }
+
+function parseMonth(value) {
+  const m = /^(\d{4})-(\d{2})$/.exec(String(value || '').trim());
+  if (!m) return null;
+  const month = Number(m[2]);
+  if (month < 1 || month > 12) return null;
+  return `${m[1]}-${m[2]}`;
 }
 
-function buildLast12Months() {
-  const months = [];
+function currentMonth() {
   const now = new Date();
-  for (let i = MONTH_COUNT - 1; i >= 0; i--) {
-    const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
-    const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
-    months.push(key);
+  return `${now.getFullYear()}-${pad(now.getMonth() + 1)}`;
+}
+
+function shiftMonth(ym, delta) {
+  const [y, m] = ym.split('-').map(Number);
+  const d = new Date(y, m - 1 + delta, 1);
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}`;
+}
+
+function listMonths(from, to) {
+  const months = [];
+  let cur = from;
+  while (cur <= to) {
+    months.push(cur);
+    cur = shiftMonth(cur, 1);
   }
   return months;
+}
+
+async function fetchPage(apiKey, page) {
+  const params = new URLSearchParams({
+    KEY: apiKey,
+    Type: 'json',
+    pIndex: String(page),
+    pSize: String(PAGE_SIZE),
+    AGE: CURRENT_AGE,
+  });
+  const upstream = await fetch(`${BILL_ENDPOINT}?${params.toString()}`);
+  const data = await upstream.json();
+  const payload = data && data.nzmimeepazxkubdpn;
+  if (!payload || payload.length < 2) return [];
+  return (payload[1] && payload[1].row) || [];
 }
 
 module.exports = async function handler(req, res) {
@@ -36,52 +69,46 @@ module.exports = async function handler(req, res) {
     return;
   }
 
-  const months = buildLast12Months();
+  const now = currentMonth();
+  let from = parseMonth(req.query && req.query.from);
+  let to = parseMonth(req.query && req.query.to);
+  if (!to) to = now;
+  if (!from) from = shiftMonth(to, -(DEFAULT_MONTHS - 1));
+  if (from > to) [from, to] = [to, from];
+  if (listMonths(from, to).length > MAX_MONTHS) from = shiftMonth(to, -(MAX_MONTHS - 1));
+
+  const months = listMonths(from, to);
   const counts = Object.fromEntries(months.map(m => [m, 0]));
-  const oldestAllowedMonth = months[0]; // 최근 12개월 중 가장 오래된 월
 
   try {
-    for (let page = 1; page <= MAX_PAGES; page++) {
-      const params = new URLSearchParams({
-        KEY: apiKey,
-        Type: 'json',
-        pIndex: String(page),
-        pSize: String(PAGE_SIZE),
-        AGE: CURRENT_AGE,
-      });
+    let done = false;
+    for (let start = 1; start <= MAX_PAGES && !done; start += BATCH_SIZE) {
+      const pages = [];
+      for (let p = start; p < start + BATCH_SIZE && p <= MAX_PAGES; p++) pages.push(p);
+      const results = await Promise.all(pages.map(p => fetchPage(apiKey, p)));
 
-      const upstream = await fetch(`${BILL_ENDPOINT}?${params.toString()}`);
-      const data = await upstream.json();
-      const payload = data && data.nzmimeepazxkubdpn;
-      if (!payload) break;
-
-      const rows = (payload[1] && payload[1].row) || [];
-      if (rows.length === 0) break;
-
-      let sawWithinRange = false;
-      let allBeforeRange = true;
-
-      rows.forEach(row => {
-        const key = monthKey(row.PROPOSE_DT);
-        if (!key) return;
-        if (key >= oldestAllowedMonth) {
-          allBeforeRange = false;
-          if (Object.prototype.hasOwnProperty.call(counts, key)) {
-            counts[key] += 1;
-            sawWithinRange = true;
-          }
+      for (const rows of results) {
+        rows.forEach(row => {
+          const key = String(row.PROPOSE_DT || '').slice(0, 7);
+          if (key && Object.prototype.hasOwnProperty.call(counts, key)) counts[key] += 1;
+        });
+        // 마지막 행이 조회 시작 월보다 과거이거나 페이지가 가득 차지 않았다면 더 조회할 필요가 없음
+        const last = rows[rows.length - 1];
+        const lastKey = last ? String(last.PROPOSE_DT || '').slice(0, 7) : '';
+        if (rows.length < PAGE_SIZE || (lastKey && lastKey < from)) {
+          done = true;
+          break;
         }
-      });
-
-      // 이 페이지의 모든 발의일이 조회 대상 12개월 범위보다 더 과거라면
-      // (데이터가 최신순 정렬이라는 전제 하에) 더 이상 조회할 필요가 없음.
-      if (allBeforeRange && !sawWithinRange) break;
-      if (rows.length < PAGE_SIZE) break; // 마지막 페이지
+      }
     }
 
-    const items = months.map(m => ({ month: m, count: counts[m] }));
-    res.status(200).json({ months: items });
+    res.setHeader('Cache-Control', 'public, s-maxage=1800, stale-while-revalidate=3600');
+    res.status(200).json({
+      from,
+      to,
+      months: months.map(m => ({ month: m, count: counts[m] })),
+    });
   } catch (err) {
-    res.status(502).json({ error: '열린국회정보 API 연결 중 오류가 발생했습니다.', detail: String(err && err.message || err) });
+    res.status(502).json({ error: '열린국회정보 API 연결 중 오류가 발생했습니다.', detail: String((err && err.message) || err) });
   }
 };

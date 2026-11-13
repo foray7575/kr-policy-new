@@ -15,7 +15,6 @@
       <div class="top-nav-brand"></div>
       <div class="top-nav-actions">
         <button class="login-link" id="loginNavBtn">로그인</button>
-        <button class="login-link" id="subscribeBtn">요금제</button>
       </div>
     </div>
     <!-- 배너 섹션 -->
@@ -68,7 +67,11 @@
           <div class="bill-trend-block bill-trend-block--large hero-graph-block" aria-label="월간 법안 발의 추이">
             <div class="bill-trend-head">
               <h4>조회 기간 선택</h4>
-              <select id="billTrendMonthSelect" class="bill-trend-select" aria-label="조회할 월 선택"></select>
+              <div class="bill-trend-range">
+                <select id="billTrendFrom" class="bill-trend-select" aria-label="시작 월 선택"></select>
+                <span style="color:var(--muted);font-size:13px">~</span>
+                <select id="billTrendTo" class="bill-trend-select" aria-label="종료 월 선택"></select>
+              </div>
             </div>
             <div class="bill-trend-chart" id="billTrendChart" aria-live="polite">
               <!-- 동적으로 채워짐: 막대 그래프 또는 누적 월 필터 결과 -->

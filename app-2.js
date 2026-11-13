@@ -1,31 +1,3 @@
-        document.getElementById('subscribeBtn').addEventListener('click', () => {
-      openModal('월정액 요금제 안내', '', `
-        <div style="display:flex;flex-direction:column;gap:12px">
-          <div style="padding:14px;border-radius:14px;border:1px solid var(--card-border);background:#f8fafc">
-            <div style="display:flex;justify-content:space-between;align-items:center">
-              <strong style="color:var(--blue-text);font-size:15px">Free (기본 무료)</strong>
-              <span style="font-size:12px;color:var(--muted);font-weight:700">0원</span>
-            </div>
-            <div style="margin-top:6px;color:#475569;font-size:13px;line-height:1.5">
-              · 국회 발의 법률안 검색 기능 그대로 이용 가능<br>
-              · 실시간 의안 동향 파악 및 정책 타자 체험
-            </div>
-          </div>
-          <div style="padding:14px;border-radius:14px;border:2px solid var(--blue-primary);background:#f0f6ff">
-            <div style="display:flex;justify-content:space-between;align-items:center">
-              <strong style="color:var(--blue-primary);font-size:15px">Plus (정책 심층 분석)</strong>
-              <span style="font-size:13px;color:var(--blue-primary);font-weight:800">월 4,900원</span>
-            </div>
-            <div style="margin-top:6px;color:#1e3a8a;font-size:13px;line-height:1.5">
-              · Free의 모든 검색 기능 포함<br>
-              · <strong>열람 가능한 정책 자료 및 분석 범위 대폭 확대</strong><br>
-              · 법안별 핵심 쟁점 심층 분석 리포트 & 맞춤 알림
-            </div>
-          </div>
-        </div>
-      `);
-    });
-
     // --- 정책 궤도형 타자 체험 (주제 선택 가능) ---
     // 타자 문장 출처: 나비스(NABIS) 정책용어사전 정의문 (glossaryTerms와 동일 데이터, 원문 그대로 사용)
     const typingTopicGroups = [
